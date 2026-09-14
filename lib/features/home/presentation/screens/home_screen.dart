@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_links.dart';
 import '../../../../core/responsive/app_breakpoints.dart';
 import '../../../../core/responsive/responsive_layout.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/external_link_service.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../widgets/hero_section.dart';
 import '../widgets/portfolio_navbar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -40,6 +42,20 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _openExternalLink(String url) async {
+    final launched = await ExternalLinkService.open(url);
+
+    if (!mounted || launched) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Could not open the link. Please try again.'),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,24 +79,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   controller: _scrollController,
                   padding: EdgeInsets.symmetric(
                     horizontal: horizontalPadding,
-                    vertical: AppSpacing.xxl,
+                    vertical: switch (windowSize) {
+                      AppWindowSize.compact => AppSpacing.md,
+                      AppWindowSize.medium => AppSpacing.xl,
+                      AppWindowSize.expanded => AppSpacing.xxl,
+                    },
                   ),
                   child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(
                         maxWidth: AppBreakpoints.maxContentWidth,
                       ),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: Text(
-                          'MD. ASIF AHMED',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
+                      child: HeroSection(
+                        windowSize: windowSize,
+                        onViewProjectsPressed: null,
+                        onResumePressed: null,
+                        onLinkedInPressed: () {
+                          _openExternalLink(AppLinks.linkedIn);
+                        },
+                        onGitHubPressed: () {
+                          _openExternalLink(AppLinks.github);
+                        },
+                        onWhatsAppPressed: () {
+                          _openExternalLink(AppLinks.whatsapp);
+                        },
                       ),
                     ),
                   ),
