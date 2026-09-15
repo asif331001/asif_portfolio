@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/responsive/app_breakpoints.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -75,7 +76,13 @@ class ProjectsSection extends StatelessWidget {
                 for (final project in PortfolioProjects.all)
                   SizedBox(
                     width: cardWidth,
-                    child: _ProjectCard(project: project, compact: _isCompact),
+                    child: _ProjectCard(
+                      project: project,
+                      compact: _isCompact,
+                      onPressed: () {
+                        context.push<void>(project.routePath);
+                      },
+                    ),
                   ),
               ],
             );
@@ -87,10 +94,15 @@ class ProjectsSection extends StatelessWidget {
 }
 
 class _ProjectCard extends StatelessWidget {
-  const _ProjectCard({required this.project, required this.compact});
+  const _ProjectCard({
+    required this.project,
+    required this.compact,
+    required this.onPressed,
+  });
 
   final PortfolioProject project;
   final bool compact;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -189,6 +201,28 @@ class _ProjectCard extends StatelessWidget {
                       for (final technology in project.technologies)
                         _TechnologyChip(label: technology, compact: compact),
                     ],
+                  ),
+                  SizedBox(height: compact ? AppSpacing.md : AppSpacing.lg),
+                  OutlinedButton.icon(
+                    onPressed: onPressed,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      side: const BorderSide(color: AppColors.borderStrong),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(AppRadius.md),
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.open_in_new_rounded, size: 17),
+                    label: const Text(
+                      'View Project',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ],
               ),
