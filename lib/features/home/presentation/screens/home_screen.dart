@@ -8,6 +8,7 @@ import '../../../../core/routing/app_routes.dart';
 import '../../../../core/services/external_link_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../widgets/about_section.dart';
+import '../widgets/contact_section.dart';
 import '../widgets/credibility_strip.dart';
 import '../widgets/experience_section.dart';
 import '../widgets/hero_section.dart';
@@ -29,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey _experienceSectionKey = GlobalKey();
   final GlobalKey _projectsSectionKey = GlobalKey();
   final GlobalKey _skillsSectionKey = GlobalKey();
+  final GlobalKey _contactSectionKey = GlobalKey();
 
   static const Set<PortfolioSection> _enabledSections = {
     PortfolioSection.home,
@@ -36,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     PortfolioSection.experience,
     PortfolioSection.projects,
     PortfolioSection.skills,
+    PortfolioSection.contact,
   };
 
   @override
@@ -57,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case PortfolioSection.skills:
         _scrollToSection(_skillsSectionKey);
       case PortfolioSection.contact:
-        return;
+        _scrollToSection(_contactSectionKey);
     }
   }
 
@@ -186,6 +189,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           KeyedSubtree(
                             key: _skillsSectionKey,
                             child: SkillsSection(windowSize: windowSize),
+                          ),
+                          SizedBox(height: sectionGap),
+                          KeyedSubtree(
+                            key: _contactSectionKey,
+                            child: ContactSection(
+                              windowSize: windowSize,
+                              onEmailPressed: () {
+                                _openExternalLink(AppLinks.email);
+                              },
+                              onWhatsAppPressed: () {
+                                _openExternalLink(AppLinks.whatsapp);
+                              },
+                              onLinkedInPressed: () {
+                                _openExternalLink(AppLinks.linkedIn);
+                              },
+                              onGitHubPressed: () {
+                                _openExternalLink(AppLinks.github);
+                              },
+                            ),
                           ),
                         ],
                       ),
