@@ -7,6 +7,7 @@ import '../../../../core/responsive/responsive_layout.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/services/external_link_service.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../widgets/about_section.dart';
 import '../widgets/credibility_strip.dart';
 import '../widgets/hero_section.dart';
 import '../widgets/portfolio_navbar.dart';
@@ -20,8 +21,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _aboutSectionKey = GlobalKey();
 
-  static const Set<PortfolioSection> _enabledSections = {PortfolioSection.home};
+  static const Set<PortfolioSection> _enabledSections = {
+    PortfolioSection.home,
+    PortfolioSection.about,
+  };
 
   @override
   void dispose() {
@@ -30,18 +35,43 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleSectionSelected(PortfolioSection section) {
-    if (section != PortfolioSection.home) {
-      return;
+    switch (section) {
+      case PortfolioSection.home:
+        _scrollToTop();
+      case PortfolioSection.about:
+        _scrollToSection(_aboutSectionKey);
+      case PortfolioSection.experience:
+      case PortfolioSection.projects:
+      case PortfolioSection.skills:
+      case PortfolioSection.contact:
+        return;
     }
+  }
 
+  void _scrollToTop() {
     if (!_scrollController.hasClients) {
       return;
     }
 
     _scrollController.animateTo(
       0,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 450),
       curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _scrollToSection(GlobalKey key) {
+    final sectionContext = key.currentContext;
+
+    if (sectionContext == null) {
+      return;
+    }
+
+    Scrollable.ensureVisible(
+      sectionContext,
+      duration: const Duration(milliseconds: 550),
+      curve: Curves.easeOutCubic,
+      alignment: 0.04,
     );
   }
 
@@ -122,6 +152,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           SizedBox(height: sectionGap),
                           CredibilityStrip(windowSize: windowSize),
+                          SizedBox(height: sectionGap),
+                          KeyedSubtree(
+                            key: _aboutSectionKey,
+                            child: AboutSection(windowSize: windowSize),
+                          ),
                         ],
                       ),
                     ),
