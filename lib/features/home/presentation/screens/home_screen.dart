@@ -12,6 +12,7 @@ import '../widgets/contact_section.dart';
 import '../widgets/credibility_strip.dart';
 import '../widgets/experience_section.dart';
 import '../widgets/hero_section.dart';
+import '../widgets/portfolio_footer.dart';
 import '../widgets/portfolio_navbar.dart';
 import '../widgets/projects_section.dart';
 import '../widgets/skills_section.dart';
@@ -208,6 +209,23 @@ class _HomeScreenState extends State<HomeScreen> {
                                 _openExternalLink(AppLinks.github);
                               },
                             ),
+                          ),
+                          SizedBox(height: sectionGap),
+                          PortfolioFooter(
+                            windowSize: windowSize,
+                            onEmailPressed: () {
+                              _openExternalLink(AppLinks.email);
+                            },
+                            onLinkedInPressed: () {
+                              _openExternalLink(AppLinks.linkedIn);
+                            },
+                            onGitHubPressed: () {
+                              _openExternalLink(AppLinks.github);
+                            },
+                            onWhatsAppPressed: () {
+                              _openExternalLink(AppLinks.whatsapp);
+                            },
+                            onBackToTopPressed: _scrollToTop,
                           ),
                         ],
                       ),
