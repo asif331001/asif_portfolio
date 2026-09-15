@@ -13,6 +13,7 @@ import '../widgets/experience_section.dart';
 import '../widgets/hero_section.dart';
 import '../widgets/portfolio_navbar.dart';
 import '../widgets/projects_section.dart';
+import '../widgets/skills_section.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,12 +28,14 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey _aboutSectionKey = GlobalKey();
   final GlobalKey _experienceSectionKey = GlobalKey();
   final GlobalKey _projectsSectionKey = GlobalKey();
+  final GlobalKey _skillsSectionKey = GlobalKey();
 
   static const Set<PortfolioSection> _enabledSections = {
     PortfolioSection.home,
     PortfolioSection.about,
     PortfolioSection.experience,
     PortfolioSection.projects,
+    PortfolioSection.skills,
   };
 
   @override
@@ -52,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case PortfolioSection.projects:
         _scrollToSection(_projectsSectionKey);
       case PortfolioSection.skills:
+        _scrollToSection(_skillsSectionKey);
       case PortfolioSection.contact:
         return;
     }
@@ -177,6 +181,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           KeyedSubtree(
                             key: _projectsSectionKey,
                             child: ProjectsSection(windowSize: windowSize),
+                          ),
+                          SizedBox(height: sectionGap),
+                          KeyedSubtree(
+                            key: _skillsSectionKey,
+                            child: SkillsSection(windowSize: windowSize),
                           ),
                         ],
                       ),
