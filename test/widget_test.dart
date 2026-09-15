@@ -29,7 +29,7 @@ void main() {
     );
 
     expect(find.text('View Projects'), findsOneWidget);
-    expect(find.text('Download Resume'), findsWidgets);
+    expect(find.text('View Resume'), findsWidgets);
     expect(find.text('LinkedIn'), findsOneWidget);
     expect(find.text('GitHub'), findsOneWidget);
     expect(find.text('WhatsApp'), findsOneWidget);

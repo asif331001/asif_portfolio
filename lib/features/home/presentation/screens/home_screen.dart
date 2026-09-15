@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_links.dart';
 import '../../../../core/responsive/app_breakpoints.dart';
 import '../../../../core/responsive/responsive_layout.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/services/external_link_service.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../widgets/credibility_strip.dart';
 import '../widgets/hero_section.dart';
 import '../widgets/portfolio_navbar.dart';
 
@@ -42,6 +45,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _viewResume() {
+    context.push<void>(AppRoutes.resume);
+  }
+
   Future<void> _openExternalLink(String url) async {
     final launched = await ExternalLinkService.open(url);
 
@@ -65,12 +72,19 @@ class _HomeScreenState extends State<HomeScreen> {
             activeSection: PortfolioSection.home,
             enabledSections: _enabledSections,
             onSectionSelected: _handleSectionSelected,
+            onResumePressed: _viewResume,
           ),
           Expanded(
             child: ResponsiveLayout(
               builder: (context, windowSize, constraints) {
                 final horizontalPadding = switch (windowSize) {
                   AppWindowSize.compact => AppSpacing.md,
+                  AppWindowSize.medium => AppSpacing.xl,
+                  AppWindowSize.expanded => AppSpacing.xxl,
+                };
+
+                final sectionGap = switch (windowSize) {
+                  AppWindowSize.compact => AppSpacing.lg,
                   AppWindowSize.medium => AppSpacing.xl,
                   AppWindowSize.expanded => AppSpacing.xxl,
                 };
@@ -90,19 +104,25 @@ class _HomeScreenState extends State<HomeScreen> {
                       constraints: const BoxConstraints(
                         maxWidth: AppBreakpoints.maxContentWidth,
                       ),
-                      child: HeroSection(
-                        windowSize: windowSize,
-                        onViewProjectsPressed: null,
-                        onResumePressed: null,
-                        onLinkedInPressed: () {
-                          _openExternalLink(AppLinks.linkedIn);
-                        },
-                        onGitHubPressed: () {
-                          _openExternalLink(AppLinks.github);
-                        },
-                        onWhatsAppPressed: () {
-                          _openExternalLink(AppLinks.whatsapp);
-                        },
+                      child: Column(
+                        children: [
+                          HeroSection(
+                            windowSize: windowSize,
+                            onViewProjectsPressed: null,
+                            onResumePressed: _viewResume,
+                            onLinkedInPressed: () {
+                              _openExternalLink(AppLinks.linkedIn);
+                            },
+                            onGitHubPressed: () {
+                              _openExternalLink(AppLinks.github);
+                            },
+                            onWhatsAppPressed: () {
+                              _openExternalLink(AppLinks.whatsapp);
+                            },
+                          ),
+                          SizedBox(height: sectionGap),
+                          CredibilityStrip(windowSize: windowSize),
+                        ],
                       ),
                     ),
                   ),

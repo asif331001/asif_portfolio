@@ -297,7 +297,7 @@ class _ResumeButton extends StatelessWidget {
       ),
       icon: Icon(Icons.download_rounded, size: compact ? 17 : 18),
       label: Text(
-        compact ? 'Resume' : 'Download Resume',
+        compact ? 'Resume' : 'View Resume',
         style: const TextStyle(fontWeight: FontWeight.w700),
       ),
     );
@@ -306,6 +306,6 @@ class _ResumeButton extends StatelessWidget {
       return button;
     }
 
-    return Tooltip(message: 'Resume will be added later', child: button);
+    return Tooltip(message: 'View resume', child: button);
   }
 }

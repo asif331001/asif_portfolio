@@ -292,7 +292,7 @@ class _HeroContent extends StatelessWidget {
               ),
               icon: Icon(Icons.download_rounded, size: _isCompact ? 17 : 19),
               label: Text(
-                'Download Resume',
+                'View Resume',
                 style: TextStyle(
                   fontSize: _isCompact ? 13 : null,
                   fontWeight: FontWeight.w700,
