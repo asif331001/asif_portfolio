@@ -12,6 +12,7 @@ import '../widgets/credibility_strip.dart';
 import '../widgets/experience_section.dart';
 import '../widgets/hero_section.dart';
 import '../widgets/portfolio_navbar.dart';
+import '../widgets/projects_section.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,11 +26,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final GlobalKey _aboutSectionKey = GlobalKey();
   final GlobalKey _experienceSectionKey = GlobalKey();
+  final GlobalKey _projectsSectionKey = GlobalKey();
 
   static const Set<PortfolioSection> _enabledSections = {
     PortfolioSection.home,
     PortfolioSection.about,
     PortfolioSection.experience,
+    PortfolioSection.projects,
   };
 
   @override
@@ -47,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case PortfolioSection.experience:
         _scrollToSection(_experienceSectionKey);
       case PortfolioSection.projects:
+        _scrollToSection(_projectsSectionKey);
       case PortfolioSection.skills:
       case PortfolioSection.contact:
         return;
@@ -143,7 +147,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           HeroSection(
                             windowSize: windowSize,
-                            onViewProjectsPressed: null,
+                            onViewProjectsPressed: () {
+                              _scrollToSection(_projectsSectionKey);
+                            },
                             onResumePressed: _viewResume,
                             onLinkedInPressed: () {
                               _openExternalLink(AppLinks.linkedIn);
@@ -166,6 +172,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           KeyedSubtree(
                             key: _experienceSectionKey,
                             child: ExperienceSection(windowSize: windowSize),
+                          ),
+                          SizedBox(height: sectionGap),
+                          KeyedSubtree(
+                            key: _projectsSectionKey,
+                            child: ProjectsSection(windowSize: windowSize),
                           ),
                         ],
                       ),
