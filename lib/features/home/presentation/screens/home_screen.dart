@@ -9,6 +9,7 @@ import '../../../../core/services/external_link_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../widgets/about_section.dart';
 import '../widgets/credibility_strip.dart';
+import '../widgets/experience_section.dart';
 import '../widgets/hero_section.dart';
 import '../widgets/portfolio_navbar.dart';
 
@@ -21,11 +22,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
+
   final GlobalKey _aboutSectionKey = GlobalKey();
+  final GlobalKey _experienceSectionKey = GlobalKey();
 
   static const Set<PortfolioSection> _enabledSections = {
     PortfolioSection.home,
     PortfolioSection.about,
+    PortfolioSection.experience,
   };
 
   @override
@@ -41,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case PortfolioSection.about:
         _scrollToSection(_aboutSectionKey);
       case PortfolioSection.experience:
+        _scrollToSection(_experienceSectionKey);
       case PortfolioSection.projects:
       case PortfolioSection.skills:
       case PortfolioSection.contact:
@@ -156,6 +161,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           KeyedSubtree(
                             key: _aboutSectionKey,
                             child: AboutSection(windowSize: windowSize),
+                          ),
+                          SizedBox(height: sectionGap),
+                          KeyedSubtree(
+                            key: _experienceSectionKey,
+                            child: ExperienceSection(windowSize: windowSize),
                           ),
                         ],
                       ),
