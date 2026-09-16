@@ -12,8 +12,9 @@ abstract final class PortfolioProjects {
         'A Flutter learning application for medical postgraduate learners '
         'and doctors, combining API-driven learning workflows, secured video, '
         'web content, notifications, and connectivity-aware experiences.',
-    featureGraphic: 'assets/feature_graphics/genesisedu_feature_graphic.png',
-    logoAssets: ['assets/project_logos/genesis_edu_logo.png'],
+    featureGraphic:
+        'assets/feature_graphics_optimized/genesisedu_feature_graphic.jpg',
+    logoAssets: ['assets/project_logos_optimized/genesis_edu_logo.png'],
     platformLabel: 'Android & iOS',
     architecture:
         'Flutter application structured with GetX and MVVM-oriented '
@@ -61,8 +62,9 @@ abstract final class PortfolioProjects {
     summary:
         'A Flutter mobile learning application created for dental learners '
         'as part of the wider Genesis education product family.',
-    featureGraphic: 'assets/feature_graphics/edudent_feature_graphics.png',
-    logoAssets: ['assets/project_logos/edudent_logo.png'],
+    featureGraphic:
+        'assets/feature_graphics_optimized/edudent_feature_graphics.jpg',
+    logoAssets: ['assets/project_logos_optimized/edudent_logo.png'],
     platformLabel: 'Android',
     architecture:
         'Flutter mobile application with dedicated dental learning workflows '
@@ -101,8 +103,8 @@ abstract final class PortfolioProjects {
         'A Flutter learning application focused on BCS and government-exam '
         'preparation workflows within the Genesis education product family.',
     featureGraphic:
-        'assets/feature_graphics/genesis_bcscare_feature_graphic.png',
-    logoAssets: ['assets/project_logos/genesis_bcscare_logo.png'],
+        'assets/feature_graphics_optimized/genesis_bcscare_feature_graphic.jpg',
+    logoAssets: ['assets/project_logos_optimized/genesis_bcscare_logo.png'],
     platformLabel: 'Flutter Mobile App',
     architecture:
         'Flutter mobile application focused on competitive-exam learning '
@@ -142,8 +144,8 @@ abstract final class PortfolioProjects {
         'workflows, examinations, video content, and API-driven user '
         'experiences.',
     featureGraphic:
-        'assets/feature_graphics/genesis_mentor_feature_graphic.png',
-    logoAssets: ['assets/project_logos/genesis_mentors_logo.jpg'],
+        'assets/feature_graphics_optimized/genesis_mentor_feature_graphic.jpg',
+    logoAssets: ['assets/project_logos_optimized/genesis_mentors_logo.jpg'],
     platformLabel: 'Android & iOS',
     architecture:
         'Layered Flutter application flow using Presentation, '
@@ -193,8 +195,9 @@ abstract final class PortfolioProjects {
         'A production Flutter application built around local-first ledger '
         'workflows, structured persistence, transaction data, and '
         'maintainable feature-oriented architecture.',
-    featureGraphic: 'assets/feature_graphics/cashfile_feature_graphic.png',
-    logoAssets: ['assets/project_logos/cashfile_logo.png'],
+    featureGraphic:
+        'assets/feature_graphics_optimized/cashfile_feature_graphic.jpg',
+    logoAssets: ['assets/project_logos_optimized/cashfile_logo.png'],
     platformLabel: 'Android & iOS',
     architecture:
         'Feature-first, layered Flutter architecture using Riverpod for '
@@ -241,8 +244,8 @@ abstract final class PortfolioProjects {
         'video, audio, deep links, web content, and Bengali/Arabic user '
         'experiences.',
     featureGraphic:
-        'assets/feature_graphics/message_academy_feature_graphic.png',
-    logoAssets: ['assets/project_logos/message_academy_logo.png'],
+        'assets/feature_graphics_optimized/message_academy_feature_graphic.jpg',
+    logoAssets: ['assets/project_logos_optimized/message_academy_logo.png'],
     platformLabel: 'Android & iOS',
     architecture:
         'Modular, feature-oriented Flutter application structure combining '
@@ -289,8 +292,9 @@ abstract final class PortfolioProjects {
         'A Flutter learning application with API-driven content, local '
         'storage, document workflows, web content, connectivity handling, '
         'and educational resources.',
-    featureGraphic: 'assets/feature_graphics/pg_easy_feature_graphic.png',
-    logoAssets: ['assets/project_logos/pg_easy_logo.png'],
+    featureGraphic:
+        'assets/feature_graphics_optimized/pg_easy_feature_graphic.jpg',
+    logoAssets: ['assets/project_logos_optimized/pg_easy_logo.png'],
     platformLabel: 'Android',
     architecture:
         'Layered Flutter application flow separating Presentation, '
@@ -338,8 +342,9 @@ abstract final class PortfolioProjects {
         'A Flutter HRM application integrating REST services, Firebase '
         'messaging, calendar workflows, local preferences, file handling, '
         'and application-side state management.',
-    featureGraphic: 'assets/feature_graphics/dg_hrm_feature_graphic.png',
-    logoAssets: ['assets/project_logos/dg_hrm_logo.png'],
+    featureGraphic:
+        'assets/feature_graphics_optimized/dg_hrm_feature_graphic.jpg',
+    logoAssets: ['assets/project_logos_optimized/dg_hrm_logo.png'],
     platformLabel: 'Android',
     architecture:
         'Layered Flutter application structure with separation of UI, '

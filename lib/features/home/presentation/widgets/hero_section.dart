@@ -981,7 +981,7 @@ class _HeroPortraitState extends State<_HeroPortrait> {
                       fit: StackFit.expand,
                       children: [
                         Image.asset(
-                          'assets/asif_ahmed_photo.png',
+                          'assets/asif_ahmed_photo_optimized.jpg',
                           fit: BoxFit.cover,
                           alignment: Alignment.topCenter,
                           semanticLabel: 'MD. Asif Ahmed',

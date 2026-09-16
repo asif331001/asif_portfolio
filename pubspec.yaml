@@ -62,10 +62,11 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/asif_ahmed_photo.png
-    - assets/project_logos/
+    - assets/asif_ahmed_photo_optimized.jpg
+    - assets/medigeneit_logo.jpeg
+    - assets/project_logos_optimized/
     - assets/app_screenshots/
-    - assets/feature_graphics/
+    - assets/feature_graphics_optimized/
     - assets/resume/
 
   # To add assets to your application, add an assets section, like this:

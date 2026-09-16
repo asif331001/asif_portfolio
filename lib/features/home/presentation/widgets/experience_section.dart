@@ -306,10 +306,16 @@ class _RoleSummary extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            DecoratedBox(
+            Container(
+              width: compact ? 46 : 52,
+              height: compact ? 46 : 52,
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                gradient: AppColors.brandGradient,
+                color: AppColors.white,
                 borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(
+                  color: AppColors.white.withValues(alpha: 0.18),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.primary.withValues(alpha: 0.20),
@@ -317,13 +323,12 @@ class _RoleSummary extends StatelessWidget {
                   ),
                 ],
               ),
-              child: SizedBox(
-                width: compact ? 46 : 52,
-                height: compact ? 46 : 52,
-                child: Icon(
-                  Icons.flutter_dash_rounded,
-                  color: AppColors.white,
-                  size: compact ? 23 : 26,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                child: Image.asset(
+                  'assets/medigeneit_logo.jpeg',
+                  fit: BoxFit.contain,
+                  semanticLabel: 'Medigene IT logo',
                 ),
               ),
             ),
