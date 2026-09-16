@@ -12,6 +12,8 @@ class CredibilityStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = windowSize == AppWindowSize.compact;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final columnCount = switch (windowSize) {
@@ -20,9 +22,7 @@ class CredibilityStrip extends StatelessWidget {
           AppWindowSize.compact => constraints.maxWidth >= 340 ? 2 : 1,
         };
 
-        final spacing = windowSize == AppWindowSize.compact
-            ? AppSpacing.xs
-            : AppSpacing.sm;
+        final spacing = compact ? AppSpacing.xs : AppSpacing.sm;
 
         final itemWidth =
             (constraints.maxWidth - (spacing * (columnCount - 1))) /
@@ -35,10 +35,10 @@ class CredibilityStrip extends StatelessWidget {
             for (var index = 0; index < _items.length; index++)
               SizedBox(
                 width: itemWidth,
-                child: _CredibilityCard(
+                child: _CredibilitySignal(
                   index: index,
                   item: _items[index],
-                  compact: windowSize == AppWindowSize.compact,
+                  compact: compact,
                 ),
               ),
           ],
@@ -48,8 +48,8 @@ class CredibilityStrip extends StatelessWidget {
   }
 }
 
-class _CredibilityCard extends StatefulWidget {
-  const _CredibilityCard({
+class _CredibilitySignal extends StatefulWidget {
+  const _CredibilitySignal({
     required this.index,
     required this.item,
     required this.compact,
@@ -60,14 +60,20 @@ class _CredibilityCard extends StatefulWidget {
   final bool compact;
 
   @override
-  State<_CredibilityCard> createState() => _CredibilityCardState();
+  State<_CredibilitySignal> createState() => _CredibilitySignalState();
 }
 
-class _CredibilityCardState extends State<_CredibilityCard> {
+class _CredibilitySignalState extends State<_CredibilitySignal> {
   bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final indexLabel = (widget.index + 1).toString().padLeft(2, '0');
+
     return MouseRegion(
       cursor: SystemMouseCursors.basic,
       onEnter: (_) {
@@ -80,157 +86,155 @@ class _CredibilityCardState extends State<_CredibilityCard> {
           _hovered = false;
         });
       },
-      child: AnimatedScale(
-        scale: _hovered ? 1.015 : 1,
-        duration: const Duration(milliseconds: 200),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                _hovered
-                    ? AppColors.surfaceElevated
-                    : AppColors.surface.withValues(alpha: 0.92),
-                AppColors.backgroundSoft,
+        transform: Matrix4.translationValues(0, _hovered ? -3 : 0, 0),
+        padding: EdgeInsets.all(widget.compact ? AppSpacing.sm : AppSpacing.md),
+        decoration: BoxDecoration(
+          color: _hovered
+              ? AppColors.primary.withValues(alpha: isDark ? 0.075 : 0.055)
+              : colors.surface.withValues(alpha: isDark ? 0.78 : 0.92),
+          borderRadius: BorderRadius.circular(
+            widget.compact ? AppRadius.md : AppRadius.lg,
+          ),
+          border: Border.all(
+            color: _hovered
+                ? AppColors.primary.withValues(alpha: 0.42)
+                : colors.outline.withValues(alpha: 0.68),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _hovered
+                  ? AppColors.primary.withValues(alpha: isDark ? 0.09 : 0.06)
+                  : AppColors.black.withValues(alpha: isDark ? 0.12 : 0.035),
+              blurRadius: _hovered ? 22 : 14,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _SignalIcon(
+                  icon: widget.item.icon,
+                  compact: widget.compact,
+                  active: _hovered,
+                ),
+                const Spacer(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'SIGNAL $indexLabel',
+                      style: TextStyle(
+                        color: colors.onSurface.withValues(alpha: 0.30),
+                        fontSize: widget.compact ? 8 : 8.5,
+                        letterSpacing: 1,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    const _SignalStatus(),
+                  ],
+                ),
               ],
             ),
-            borderRadius: BorderRadius.circular(
-              widget.compact ? AppRadius.md : AppRadius.lg,
-            ),
-            border: Border.all(
-              color: _hovered ? AppColors.borderAccent : AppColors.border,
-            ),
-            boxShadow: _hovered
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.10),
-                      blurRadius: 26,
-                      offset: const Offset(0, 12),
-                    ),
-                    BoxShadow(
-                      color: AppColors.secondary.withValues(alpha: 0.08),
-                      blurRadius: 36,
-                      offset: const Offset(0, 16),
-                    ),
-                  ]
-                : [
-                    BoxShadow(
-                      color: AppColors.black.withValues(alpha: 0.16),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                top: 0,
-                left: widget.compact ? 14 : 18,
-                right: widget.compact ? 14 : 18,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  height: 2,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary.withValues(
-                          alpha: _hovered ? 0.95 : 0.42,
-                        ),
-                        AppColors.secondary.withValues(
-                          alpha: _hovered ? 0.95 : 0.42,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+            SizedBox(height: widget.compact ? AppSpacing.sm : AppSpacing.md),
+            Text(
+              widget.item.value,
+              style: TextStyle(
+                color: colors.onSurface,
+                fontSize: widget.compact ? 16 : 19,
+                height: 1.12,
+                letterSpacing: -0.25,
+                fontWeight: FontWeight.w900,
               ),
-              Padding(
-                padding: EdgeInsets.all(
-                  widget.compact ? AppSpacing.md : AppSpacing.lg,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: AppColors.brandGradient,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.18),
-                            blurRadius: 16,
-                          ),
-                        ],
-                      ),
-                      child: SizedBox(
-                        width: widget.compact ? 38 : 44,
-                        height: widget.compact ? 38 : 44,
-                        child: Icon(
-                          widget.item.icon,
-                          size: widget.compact ? 18 : 21,
-                          color: AppColors.white,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: widget.compact ? AppSpacing.xs : AppSpacing.sm,
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  widget.item.value,
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: widget.compact ? 15 : 18,
-                                    height: 1.15,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                '0${widget.index + 1}',
-                                style: TextStyle(
-                                  color: AppColors.textSubtle.withValues(
-                                    alpha: 0.80,
-                                  ),
-                                  fontSize: widget.compact ? 9 : 10,
-                                  letterSpacing: 1.1,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.xxs),
-                          Text(
-                            widget.item.label,
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: widget.compact ? 11.5 : 12.5,
-                              height: 1.4,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              widget.item.label,
+              style: TextStyle(
+                color: colors.onSurface.withValues(alpha: 0.55),
+                fontSize: widget.compact ? 11 : 12.5,
+                height: 1.4,
+                fontWeight: FontWeight.w500,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _SignalIcon extends StatelessWidget {
+  const _SignalIcon({
+    required this.icon,
+    required this.compact,
+    required this.active,
+  });
+
+  final IconData icon;
+  final bool compact;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      width: compact ? 38 : 44,
+      height: compact ? 38 : 44,
+      decoration: BoxDecoration(
+        gradient: active ? AppColors.brandGradient : null,
+        color: active ? null : AppColors.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: active
+              ? AppColors.transparent
+              : AppColors.primary.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Icon(
+        icon,
+        size: compact ? 18 : 20,
+        color: active ? AppColors.white : AppColors.primary,
+      ),
+    );
+  }
+}
+
+class _SignalStatus extends StatelessWidget {
+  const _SignalStatus();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          decoration: const BoxDecoration(
+            color: AppColors.success,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          'VERIFIED',
+          style: TextStyle(
+            color: colors.onSurface.withValues(alpha: 0.38),
+            fontSize: 8,
+            letterSpacing: 0.8,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -255,17 +259,17 @@ const List<_CredibilityItem> _items = [
   ),
   _CredibilityItem(
     icon: Icons.devices_rounded,
-    value: 'Android & iOS',
+    value: 'Android + iOS',
     label: 'Production mobile delivery',
   ),
   _CredibilityItem(
     icon: Icons.apps_rounded,
-    value: 'Production Apps',
-    label: 'Real-world Flutter products',
+    value: '8 Projects',
+    label: 'Real-world Flutter product work',
   ),
   _CredibilityItem(
     icon: Icons.verified_rounded,
     value: 'Store Releases',
-    label: 'Play Store & App Store',
+    label: 'Play Store & App Store workflows',
   ),
 ];

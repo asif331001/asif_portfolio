@@ -9,6 +9,7 @@ import '../../../../core/services/resume_download_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/theme_controller.dart';
 
 class ResumeScreen extends StatefulWidget {
   const ResumeScreen({super.key});
@@ -19,6 +20,9 @@ class ResumeScreen extends StatefulWidget {
 
 class _ResumeScreenState extends State<ResumeScreen> {
   bool _isDownloading = false;
+  bool _isPdfReady = false;
+  bool _pdfLoadFailed = false;
+  int _viewerGeneration = 0;
 
   Future<void> _downloadResume() async {
     if (_isDownloading) {
@@ -50,6 +54,36 @@ class _ResumeScreenState extends State<ResumeScreen> {
     );
   }
 
+  void _handlePdfReady() {
+    if (!mounted || _isPdfReady) {
+      return;
+    }
+
+    setState(() {
+      _isPdfReady = true;
+      _pdfLoadFailed = false;
+    });
+  }
+
+  void _handlePdfLoadFailed() {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isPdfReady = false;
+      _pdfLoadFailed = true;
+    });
+  }
+
+  void _retryPdf() {
+    setState(() {
+      _isPdfReady = false;
+      _pdfLoadFailed = false;
+      _viewerGeneration++;
+    });
+  }
+
   void _goBack() {
     if (Navigator.of(context).canPop()) {
       context.pop();
@@ -61,69 +95,101 @@ class _ResumeScreenState extends State<ResumeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: ResponsiveLayout(
-          builder: (context, windowSize, _) {
-            final isCompact = windowSize == AppWindowSize.compact;
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? const [
+                    AppColors.background,
+                    AppColors.backgroundSoft,
+                    AppColors.background,
+                  ]
+                : const [
+                    AppColors.lightBackground,
+                    AppColors.lightBackgroundSoft,
+                    AppColors.lightBackground,
+                  ],
+          ),
+        ),
+        child: SafeArea(
+          child: ResponsiveLayout(
+            builder: (context, windowSize, _) {
+              final compact = windowSize == AppWindowSize.compact;
 
-            final horizontalPadding = switch (windowSize) {
-              AppWindowSize.compact => AppSpacing.md,
-              AppWindowSize.medium => AppSpacing.xl,
-              AppWindowSize.expanded => AppSpacing.xxl,
-            };
+              final horizontalPadding = switch (windowSize) {
+                AppWindowSize.compact => AppSpacing.md,
+                AppWindowSize.medium => AppSpacing.xl,
+                AppWindowSize.expanded => AppSpacing.xxl,
+              };
 
-            return Stack(
-              children: [
-                const Positioned(
-                  top: -180,
-                  right: -150,
-                  child: _AmbientOrb(
-                    size: 420,
-                    color: AppColors.secondary,
-                    opacity: 0.06,
-                  ),
-                ),
-                const Positioned(
-                  left: -190,
-                  bottom: -210,
-                  child: _AmbientOrb(
-                    size: 440,
-                    color: AppColors.primary,
-                    opacity: 0.05,
-                  ),
-                ),
-                Column(
-                  children: [
-                    _ResumeHeader(
-                      compact: isCompact,
-                      horizontalPadding: horizontalPadding,
-                      downloading: _isDownloading,
-                      onBackPressed: _goBack,
-                      onDownloadPressed: _downloadResume,
+              return Stack(
+                children: [
+                  Positioned(
+                    top: -180,
+                    right: -150,
+                    child: _AmbientOrb(
+                      size: 420,
+                      color: AppColors.secondary,
+                      opacity: isDark ? 0.055 : 0.025,
                     ),
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          horizontalPadding,
-                          isCompact ? AppSpacing.sm : AppSpacing.lg,
-                          horizontalPadding,
-                          isCompact ? AppSpacing.sm : AppSpacing.lg,
-                        ),
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1080),
-                            child: _ResumeViewerFrame(compact: isCompact),
+                  ),
+                  Positioned(
+                    left: -190,
+                    bottom: -210,
+                    child: _AmbientOrb(
+                      size: 440,
+                      color: AppColors.primary,
+                      opacity: isDark ? 0.045 : 0.025,
+                    ),
+                  ),
+                  Column(
+                    children: [
+                      _ResumeHeader(
+                        compact: compact,
+                        horizontalPadding: horizontalPadding,
+                        downloading: _isDownloading,
+                        onBackPressed: _goBack,
+                        onDownloadPressed: _downloadResume,
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            horizontalPadding,
+                            compact ? AppSpacing.sm : AppSpacing.lg,
+                            horizontalPadding,
+                            compact ? AppSpacing.sm : AppSpacing.lg,
+                          ),
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 1080),
+                              child: _ResumeViewerFrame(
+                                compact: compact,
+                                ready: _isPdfReady,
+                                failed: _pdfLoadFailed,
+                                viewerGeneration: _viewerGeneration,
+                                onReady: _handlePdfReady,
+                                onLoadFailed: _handlePdfLoadFailed,
+                                onRetry: _retryPdf,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -147,13 +213,21 @@ class _ResumeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.background.withValues(alpha: 0.96),
-        border: const Border(bottom: BorderSide(color: AppColors.border)),
+        color: theme.scaffoldBackgroundColor.withValues(
+          alpha: isDark ? 0.94 : 0.96,
+        ),
+        border: Border(
+          bottom: BorderSide(color: colors.outline.withValues(alpha: 0.58)),
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.18),
+            color: AppColors.black.withValues(alpha: isDark ? 0.14 : 0.04),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -173,7 +247,9 @@ class _ResumeHeader extends StatelessWidget {
                   _BackButton(compact: compact, onPressed: onBackPressed),
                   SizedBox(width: compact ? AppSpacing.sm : AppSpacing.md),
                   Expanded(child: _ResumeIdentity(compact: compact)),
-                  SizedBox(width: compact ? AppSpacing.xs : AppSpacing.md),
+                  SizedBox(width: compact ? AppSpacing.xs : AppSpacing.sm),
+                  const _ThemeToggle(),
+                  SizedBox(width: compact ? AppSpacing.xs : AppSpacing.sm),
                   _DownloadButton(
                     compact: compact,
                     downloading: downloading,
@@ -196,27 +272,29 @@ class _ResumeIdentity extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Row(
       children: [
         if (!compact) ...[
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: AppColors.brandGradient,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.18),
+                  color: AppColors.primary.withValues(alpha: 0.16),
                   blurRadius: 14,
                 ),
               ],
             ),
             child: const SizedBox(
-              width: 36,
-              height: 36,
+              width: 38,
+              height: 38,
               child: Icon(
                 Icons.description_outlined,
                 color: AppColors.white,
-                size: 18,
+                size: 19,
               ),
             ),
           ),
@@ -232,19 +310,19 @@ class _ResumeIdentity extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: AppColors.textPrimary,
+                  color: colors.onSurface,
                   fontSize: compact ? 17 : 19,
                   fontWeight: FontWeight.w900,
                 ),
               ),
               if (!compact) ...[
                 const SizedBox(height: 2),
-                const Text(
+                Text(
                   'MD. Asif Ahmed • Flutter Developer',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: colors.onSurface.withValues(alpha: 0.52),
                     fontSize: 11.5,
                     fontWeight: FontWeight.w500,
                   ),
@@ -276,16 +354,21 @@ class _BackButtonState extends State<_BackButton> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
+      transform: Matrix4.translationValues(_active ? -2 : 0, 0, 0),
       decoration: BoxDecoration(
         color: _active
-            ? AppColors.primary.withValues(alpha: 0.10)
-            : AppColors.surface.withValues(alpha: 0.52),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+            ? AppColors.primary.withValues(alpha: 0.09)
+            : colors.surface.withValues(alpha: 0.58),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
-          color: _active ? AppColors.borderAccent : AppColors.border,
+          color: _active
+              ? AppColors.primary.withValues(alpha: 0.38)
+              : colors.outline.withValues(alpha: 0.62),
         ),
       ),
       child: Material(
@@ -303,11 +386,11 @@ class _BackButtonState extends State<_BackButton> {
             });
           },
           mouseCursor: SystemMouseCursors.click,
-          borderRadius: BorderRadius.circular(AppRadius.sm),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           hoverColor: AppColors.transparent,
           focusColor: AppColors.transparent,
-          splashColor: AppColors.primary.withValues(alpha: 0.08),
           highlightColor: AppColors.transparent,
+          splashColor: AppColors.primary.withValues(alpha: 0.06),
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: widget.compact ? AppSpacing.xs : AppSpacing.sm,
@@ -316,28 +399,118 @@ class _BackButtonState extends State<_BackButton> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                AnimatedSlide(
-                  offset: _active ? const Offset(-0.10, 0) : Offset.zero,
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOutCubic,
-                  child: const Icon(
-                    Icons.arrow_back_rounded,
-                    color: AppColors.primary,
-                    size: 18,
-                  ),
+                const Icon(
+                  Icons.arrow_back_rounded,
+                  color: AppColors.primary,
+                  size: 18,
                 ),
                 if (!widget.compact) ...[
                   const SizedBox(width: AppSpacing.xs),
-                  const Text(
+                  Text(
                     'Portfolio',
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: colors.onSurface.withValues(alpha: 0.68),
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeToggle extends StatefulWidget {
+  const _ThemeToggle();
+
+  @override
+  State<_ThemeToggle> createState() => _ThemeToggleState();
+}
+
+class _ThemeToggleState extends State<_ThemeToggle> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final targetLabel = isDark
+        ? 'Switch to light theme'
+        : 'Switch to dark theme';
+
+    return Tooltip(
+      message: targetLabel,
+      child: Semantics(
+        button: true,
+        label: targetLabel,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) {
+            setState(() {
+              _hovered = true;
+            });
+          },
+          onExit: (_) {
+            setState(() {
+              _hovered = false;
+            });
+          },
+          child: AnimatedScale(
+            scale: _hovered ? 1.045 : 1,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            child: Material(
+              color: AppColors.transparent,
+              child: InkWell(
+                onTap: () {
+                  ThemeController.instance.toggleTheme();
+                },
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: _hovered
+                        ? AppColors.primary.withValues(alpha: 0.09)
+                        : colors.surface.withValues(alpha: 0.60),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(
+                      color: _hovered
+                          ? AppColors.primary.withValues(alpha: 0.38)
+                          : colors.outline.withValues(alpha: 0.62),
+                    ),
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    transitionBuilder: (child, animation) {
+                      return RotationTransition(
+                        turns: Tween<double>(
+                          begin: 0.75,
+                          end: 1,
+                        ).animate(animation),
+                        child: ScaleTransition(scale: animation, child: child),
+                      );
+                    },
+                    child: Icon(
+                      isDark
+                          ? Icons.light_mode_rounded
+                          : Icons.dark_mode_rounded,
+                      key: ValueKey(isDark),
+                      size: 19,
+                      color: isDark
+                          ? const Color(0xFFFFD66B)
+                          : AppColors.secondary,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -359,11 +532,55 @@ class _DownloadButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    if (compact) {
+      return Tooltip(
+        message: downloading ? 'Downloading...' : 'Download Resume',
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: downloading ? null : AppColors.brandGradient,
+            color: downloading ? colors.surface : null,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            boxShadow: downloading
+                ? null
+                : [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.16),
+                      blurRadius: 16,
+                    ),
+                  ],
+          ),
+          child: SizedBox(
+            width: 42,
+            height: 42,
+            child: IconButton(
+              onPressed: downloading ? null : onPressed,
+              icon: downloading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.primary,
+                        ),
+                      ),
+                    )
+                  : const Icon(Icons.download_rounded, size: 18),
+              color: AppColors.white,
+              disabledColor: colors.onSurface.withValues(alpha: 0.42),
+            ),
+          ),
+        ),
+      );
+    }
+
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: downloading ? null : AppColors.brandGradient,
-        color: downloading ? AppColors.surfaceSoft : null,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        color: downloading ? colors.surface : null,
+        borderRadius: BorderRadius.circular(AppRadius.md),
         boxShadow: downloading
             ? null
             : [
@@ -380,38 +597,33 @@ class _DownloadButton extends StatelessWidget {
           backgroundColor: AppColors.transparent,
           disabledBackgroundColor: AppColors.transparent,
           foregroundColor: AppColors.white,
-          disabledForegroundColor: AppColors.textMuted,
+          disabledForegroundColor: colors.onSurface.withValues(alpha: 0.42),
           shadowColor: AppColors.transparent,
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? AppSpacing.sm : AppSpacing.md,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,
           ),
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(AppRadius.sm)),
+            borderRadius: BorderRadius.all(Radius.circular(AppRadius.md)),
           ),
         ),
         icon: downloading
-            ? SizedBox(
-                width: compact ? 15 : 17,
-                height: compact ? 15 : 17,
-                child: const CircularProgressIndicator(
+            ? const SizedBox(
+                width: 17,
+                height: 17,
+                child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.textMuted,
-                  ),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
               )
-            : Icon(
+            : const Icon(
                 Icons.download_rounded,
-                size: compact ? 17 : 19,
+                size: 19,
                 color: AppColors.white,
               ),
-        label: Text(
-          compact ? 'Download' : 'Download PDF',
-          style: TextStyle(
-            fontSize: compact ? 11.5 : 13,
-            fontWeight: FontWeight.w800,
-          ),
+        label: const Text(
+          'Download PDF',
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
         ),
       ),
     );
@@ -419,12 +631,30 @@ class _DownloadButton extends StatelessWidget {
 }
 
 class _ResumeViewerFrame extends StatelessWidget {
-  const _ResumeViewerFrame({required this.compact});
+  const _ResumeViewerFrame({
+    required this.compact,
+    required this.ready,
+    required this.failed,
+    required this.viewerGeneration,
+    required this.onReady,
+    required this.onLoadFailed,
+    required this.onRetry,
+  });
 
   final bool compact;
+  final bool ready;
+  final bool failed;
+  final int viewerGeneration;
+  final VoidCallback onReady;
+  final VoidCallback onLoadFailed;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(
         compact ? AppRadius.md : AppRadius.lg,
@@ -434,23 +664,35 @@ class _ResumeViewerFrame extends StatelessWidget {
           borderRadius: BorderRadius.circular(
             compact ? AppRadius.md : AppRadius.lg,
           ),
-          border: Border.all(color: AppColors.borderStrong),
-          gradient: const LinearGradient(
+          border: Border.all(
+            color: colors.outline.withValues(alpha: isDark ? 0.84 : 0.68),
+          ),
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0D172A), Color(0xFF080F1D), Color(0xFF050A15)],
+            colors: isDark
+                ? const [
+                    Color(0xFF0D1728),
+                    Color(0xFF080F1D),
+                    Color(0xFF050A14),
+                  ]
+                : const [
+                    Color(0xFFFFFFFF),
+                    Color(0xFFF8FAFF),
+                    Color(0xFFF0F4FA),
+                  ],
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.black.withValues(alpha: 0.28),
+              color: AppColors.black.withValues(alpha: isDark ? 0.22 : 0.06),
               blurRadius: 32,
-              offset: const Offset(0, 16),
+              offset: const Offset(0, 14),
             ),
           ],
         ),
         child: Column(
           children: [
-            _ViewerToolbar(compact: compact),
+            _ViewerToolbar(compact: compact, ready: ready, failed: failed),
             Expanded(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
@@ -465,10 +707,49 @@ class _ResumeViewerFrame extends StatelessWidget {
                   ),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      border: Border.all(color: AppColors.border),
+                      color: colors.surface,
+                      border: Border.all(
+                        color: colors.outline.withValues(alpha: 0.58),
+                      ),
                     ),
-                    child: PdfViewer.asset(ResumeDownloadService.assetPath),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        PdfViewer.asset(
+                          ResumeDownloadService.assetPath,
+                          key: ValueKey(viewerGeneration),
+                          params: PdfViewerParams(
+                            backgroundColor: colors.surface,
+                            margin: compact ? 6 : 12,
+                            onViewerReady: (_, _) {
+                              onReady();
+                            },
+                            onDocumentLoadFinished: (_, succeeded) {
+                              if (!succeeded) {
+                                onLoadFailed();
+                              }
+                            },
+                          ),
+                        ),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 260),
+                          child: failed
+                              ? _PdfErrorOverlay(
+                                  key: const ValueKey('pdf-error'),
+                                  compact: compact,
+                                  onRetry: onRetry,
+                                )
+                              : !ready
+                              ? _PdfLoadingOverlay(
+                                  key: const ValueKey('pdf-loading'),
+                                  compact: compact,
+                                )
+                              : const SizedBox.shrink(
+                                  key: ValueKey('pdf-ready'),
+                                ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -481,12 +762,32 @@ class _ResumeViewerFrame extends StatelessWidget {
 }
 
 class _ViewerToolbar extends StatelessWidget {
-  const _ViewerToolbar({required this.compact});
+  const _ViewerToolbar({
+    required this.compact,
+    required this.ready,
+    required this.failed,
+  });
 
   final bool compact;
+  final bool ready;
+  final bool failed;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    final statusLabel = failed
+        ? 'ERROR'
+        : ready
+        ? 'READY'
+        : 'LOADING';
+
+    final statusColor = failed
+        ? Colors.redAccent
+        : ready
+        ? AppColors.success
+        : AppColors.primary;
+
     return SizedBox(
       height: compact ? 48 : 54,
       child: Padding(
@@ -499,48 +800,219 @@ class _ViewerToolbar extends StatelessWidget {
               width: 7,
               height: 7,
               decoration: BoxDecoration(
-                color: AppColors.success,
+                color: statusColor,
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.success.withValues(alpha: 0.30),
-                    blurRadius: 8,
-                  ),
-                ],
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
             Text(
               'RESUME PREVIEW',
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: colors.onSurface.withValues(alpha: 0.62),
                 fontSize: compact ? 9.5 : 10.5,
                 letterSpacing: 1.4,
                 fontWeight: FontWeight.w900,
               ),
             ),
             const Spacer(),
-            if (!compact)
-              const Text(
-                'PDF DOCUMENT',
-                style: TextStyle(
-                  color: AppColors.textSubtle,
-                  fontSize: 9,
-                  letterSpacing: 1.3,
-                  fontWeight: FontWeight.w800,
-                ),
+            Text(
+              statusLabel,
+              style: TextStyle(
+                color: statusColor,
+                fontSize: 8.5,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w900,
               ),
+            ),
             if (!compact) ...[
               const SizedBox(width: AppSpacing.sm),
-              Container(width: 1, height: 18, color: AppColors.border),
+              Container(
+                width: 1,
+                height: 18,
+                color: colors.outline.withValues(alpha: 0.56),
+              ),
               const SizedBox(width: AppSpacing.sm),
+              Icon(
+                Icons.picture_as_pdf_outlined,
+                color: colors.onSurface.withValues(alpha: 0.48),
+                size: 18,
+              ),
             ],
-            const Icon(
-              Icons.picture_as_pdf_outlined,
-              color: AppColors.accent,
-              size: 18,
-            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PdfLoadingOverlay extends StatelessWidget {
+  const _PdfLoadingOverlay({required this.compact, super.key});
+
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return ColoredBox(
+      color: colors.surface.withValues(alpha: isDark ? 0.96 : 0.98),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.09),
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.18),
+                    ),
+                  ),
+                  child: SizedBox(
+                    width: compact ? 58 : 66,
+                    height: compact ? 58 : 66,
+                    child: const Center(
+                      child: Icon(
+                        Icons.description_outlined,
+                        color: AppColors.primary,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: compact ? AppSpacing.md : AppSpacing.lg),
+                const SizedBox(
+                  width: 26,
+                  height: 26,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.6,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Preparing resume preview',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colors.onSurface,
+                    fontSize: compact ? 16 : 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Loading and rendering the PDF document...',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colors.onSurface.withValues(alpha: 0.50),
+                    fontSize: compact ? 11.5 : 12.5,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PdfErrorOverlay extends StatelessWidget {
+  const _PdfErrorOverlay({
+    required this.compact,
+    required this.onRetry,
+    super.key,
+  });
+
+  final bool compact;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return ColoredBox(
+      color: colors.surface,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 380),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    border: Border.all(
+                      color: Colors.redAccent.withValues(alpha: 0.20),
+                    ),
+                  ),
+                  child: SizedBox(
+                    width: compact ? 58 : 66,
+                    height: compact ? 58 : 66,
+                    child: const Icon(
+                      Icons.error_outline_rounded,
+                      color: Colors.redAccent,
+                      size: 28,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Could not load the resume',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colors.onSurface,
+                    fontSize: compact ? 16 : 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'The PDF preview could not be prepared. You can retry the viewer.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colors.onSurface.withValues(alpha: 0.50),
+                    fontSize: compact ? 11.5 : 12.5,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                FilledButton.icon(
+                  onPressed: onRetry,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(AppRadius.md),
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.refresh_rounded, size: 17),
+                  label: const Text(
+                    'Retry',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

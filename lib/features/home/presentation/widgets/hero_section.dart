@@ -7,7 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 
-class HeroSection extends StatefulWidget {
+class HeroSection extends StatelessWidget {
   const HeroSection({
     required this.windowSize,
     required this.onLinkedInPressed,
@@ -25,171 +25,116 @@ class HeroSection extends StatefulWidget {
   final VoidCallback? onViewProjectsPressed;
   final VoidCallback? onResumePressed;
 
-  @override
-  State<HeroSection> createState() => _HeroSectionState();
-}
+  bool get _isCompact => windowSize == AppWindowSize.compact;
 
-class _HeroSectionState extends State<HeroSection> {
-  Offset? _hoverPosition;
-  Offset _portraitParallax = Offset.zero;
-
-  bool get _isExpanded => widget.windowSize == AppWindowSize.expanded;
-
-  bool get _isCompact => widget.windowSize == AppWindowSize.compact;
+  bool get _isExpanded => windowSize == AppWindowSize.expanded;
 
   @override
   Widget build(BuildContext context) {
-    final content = _isExpanded
-        ? Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                flex: 6,
-                child: _HeroContent(
-                  windowSize: widget.windowSize,
-                  onViewProjectsPressed: widget.onViewProjectsPressed,
-                  onResumePressed: widget.onResumePressed,
-                  onLinkedInPressed: widget.onLinkedInPressed,
-                  onGitHubPressed: widget.onGitHubPressed,
-                  onWhatsAppPressed: widget.onWhatsAppPressed,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xxxl),
-              Expanded(
-                flex: 4,
-                child: _HeroMotionPortrait(parallax: _portraitParallax),
-              ),
-            ],
-          )
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _HeroContent(
-                windowSize: widget.windowSize,
-                onViewProjectsPressed: widget.onViewProjectsPressed,
-                onResumePressed: widget.onResumePressed,
-                onLinkedInPressed: widget.onLinkedInPressed,
-                onGitHubPressed: widget.onGitHubPressed,
-                onWhatsAppPressed: widget.onWhatsAppPressed,
-              ),
-              SizedBox(height: _isCompact ? AppSpacing.lg : AppSpacing.xxxl),
-              Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: _isCompact ? 265 : 430),
-                  child: _HeroMotionPortrait(compact: _isCompact),
-                ),
-              ),
-            ],
-          );
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return MouseRegion(
-          onHover: _isExpanded
-              ? (event) {
-                  final width = constraints.maxWidth;
+    final radius = _isCompact ? AppRadius.lg : AppRadius.xl;
 
-                  if (!width.isFinite || width <= 0) {
-                    return;
-                  }
-
-                  final normalizedX =
-                      ((event.localPosition.dx / width) - 0.5) * 2;
-
-                  final normalizedY =
-                      ((event.localPosition.dy / 720) - 0.5) * 2;
-
-                  setState(() {
-                    _hoverPosition = event.localPosition;
-                    _portraitParallax = Offset(
-                      normalizedX.clamp(-1.0, 1.0) * 9,
-                      normalizedY.clamp(-1.0, 1.0) * 6,
-                    );
-                  });
-                }
-              : null,
-          onExit: _isExpanded
-              ? (_) {
-                  setState(() {
-                    _hoverPosition = null;
-                    _portraitParallax = Offset.zero;
-                  });
-                }
-              : null,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(
-              _isCompact ? AppRadius.lg : AppRadius.xl,
-            ),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(
-                  _isCompact ? AppRadius.lg : AppRadius.xl,
-                ),
-                border: Border.all(color: AppColors.borderStrong),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.26),
-                    blurRadius: 48,
-                    offset: const Offset(0, 22),
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  const Positioned.fill(child: _HeroBackground()),
-                  if (_hoverPosition != null)
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 160),
-                      curve: Curves.easeOutCubic,
-                      left: _hoverPosition!.dx - 210,
-                      top: _hoverPosition!.dy - 210,
-                      child: const _CursorGlow(),
-                    ),
-                  Positioned(
-                    top: -150 + (_portraitParallax.dy * 0.65),
-                    right: -100 - (_portraitParallax.dx * 0.80),
-                    child: const _GlowOrb(
-                      size: 390,
-                      color: AppColors.primary,
-                      opacity: 0.13,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -180 - (_portraitParallax.dy * 0.45),
-                    left: -100 - (_portraitParallax.dx * 0.55),
-                    child: const _GlowOrb(
-                      size: 360,
-                      color: AppColors.secondary,
-                      opacity: 0.11,
-                    ),
-                  ),
-                  Positioned(
-                    top: 0,
-                    left: _isCompact ? 24 : 42,
-                    child: const _TopAccent(),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: switch (widget.windowSize) {
-                        AppWindowSize.compact => AppSpacing.md,
-                        AppWindowSize.medium => AppSpacing.xl,
-                        AppWindowSize.expanded => AppSpacing.xxxl,
-                      },
-                      vertical: switch (widget.windowSize) {
-                        AppWindowSize.compact => AppSpacing.lg,
-                        AppWindowSize.medium => 56,
-                        AppWindowSize.expanded => 82,
-                      },
-                    ),
-                    child: content,
-                  ),
-                ],
-              ),
-            ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(
+            color: colors.outline.withValues(alpha: isDark ? 0.88 : 0.72),
           ),
-        );
-      },
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.black.withValues(alpha: isDark ? 0.26 : 0.08),
+              blurRadius: isDark ? 50 : 38,
+              offset: const Offset(0, 22),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(child: _HeroStaticBackground(isDark: isDark)),
+            Positioned(
+              top: -150,
+              right: -110,
+              child: _StaticGlow(
+                size: _isCompact ? 300 : 430,
+                color: AppColors.primary,
+                opacity: isDark ? 0.13 : 0.10,
+              ),
+            ),
+            Positioned(
+              bottom: -170,
+              left: -120,
+              child: _StaticGlow(
+                size: _isCompact ? 320 : 450,
+                color: AppColors.secondary,
+                opacity: isDark ? 0.11 : 0.08,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: switch (windowSize) {
+                  AppWindowSize.compact => AppSpacing.md,
+                  AppWindowSize.medium => AppSpacing.xl,
+                  AppWindowSize.expanded => AppSpacing.xxxl,
+                },
+                vertical: switch (windowSize) {
+                  AppWindowSize.compact => AppSpacing.lg,
+                  AppWindowSize.medium => 52,
+                  AppWindowSize.expanded => 72,
+                },
+              ),
+              child: _isExpanded
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          flex: 6,
+                          child: _HeroContent(
+                            windowSize: windowSize,
+                            onViewProjectsPressed: onViewProjectsPressed,
+                            onResumePressed: onResumePressed,
+                            onLinkedInPressed: onLinkedInPressed,
+                            onGitHubPressed: onGitHubPressed,
+                            onWhatsAppPressed: onWhatsAppPressed,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xxxl),
+                        const Expanded(flex: 4, child: _TechPortraitSystem()),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _HeroContent(
+                          windowSize: windowSize,
+                          onViewProjectsPressed: onViewProjectsPressed,
+                          onResumePressed: onResumePressed,
+                          onLinkedInPressed: onLinkedInPressed,
+                          onGitHubPressed: onGitHubPressed,
+                          onWhatsAppPressed: onWhatsAppPressed,
+                        ),
+                        SizedBox(
+                          height: _isCompact ? AppSpacing.xl : AppSpacing.xxxl,
+                        ),
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: _isCompact ? 330 : 470,
+                            ),
+                            child: const _TechPortraitSystem(),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -215,33 +160,35 @@ class _HeroContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     final nameSize = switch (windowSize) {
-      AppWindowSize.compact => 38.0,
+      AppWindowSize.compact => 40.0,
       AppWindowSize.medium => 58.0,
-      AppWindowSize.expanded => 72.0,
+      AppWindowSize.expanded => 70.0,
     };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
+        Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            _AvailabilityBadge(compact: _isCompact),
-            if (!_isCompact) ...[
-              const SizedBox(width: AppSpacing.sm),
-              const _PortfolioIndex(),
-            ],
+            const _SystemStatusBadge(),
+            if (!_isCompact) const _MicroLabel(text: 'PORTFOLIO / 2026'),
           ],
         ),
         SizedBox(height: _isCompact ? AppSpacing.md : AppSpacing.lg),
         Text(
           'MD. ASIF',
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: colors.onSurface,
             fontSize: nameSize,
             height: 0.90,
-            letterSpacing: _isCompact ? -1.2 : -2.2,
+            letterSpacing: _isCompact ? -1.4 : -2.3,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -256,38 +203,39 @@ class _HeroContent extends StatelessWidget {
               color: AppColors.white,
               fontSize: nameSize,
               height: 0.98,
-              letterSpacing: _isCompact ? -1.2 : -2.2,
+              letterSpacing: _isCompact ? -1.4 : -2.3,
               fontWeight: FontWeight.w900,
             ),
           ),
         ),
         SizedBox(height: _isCompact ? AppSpacing.sm : AppSpacing.md),
         Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
           spacing: AppSpacing.xs,
           runSpacing: AppSpacing.xxs,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(
               'Mobile Application Developer',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.textSecondary,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: colors.onSurface.withValues(alpha: 0.72),
                 fontSize: _isCompact ? 15 : 19,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const _RoleSeparator(),
-            ShaderMask(
-              blendMode: BlendMode.srcIn,
-              shaderCallback: (bounds) {
-                return AppColors.brandGradient.createShader(bounds);
-              },
-              child: Text(
-                'Flutter Developer',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.white,
-                  fontSize: _isCompact ? 15 : 19,
-                  fontWeight: FontWeight.w800,
-                ),
+            Container(
+              width: 4,
+              height: 4,
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+            ),
+            Text(
+              'Flutter Developer',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: AppColors.primary,
+                fontSize: _isCompact ? 15 : 19,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ],
@@ -296,60 +244,33 @@ class _HeroContent extends StatelessWidget {
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),
           child: Text(
-            'I turn product ideas into polished, '
-            'production-ready Flutter experiences.',
+            'I engineer mobile products that move from idea to production.',
             style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: _isCompact ? 22 : 31,
-              height: _isCompact ? 1.18 : 1.22,
+              color: colors.onSurface,
+              fontSize: _isCompact ? 23 : 32,
+              height: _isCompact ? 1.17 : 1.20,
               fontWeight: FontWeight.w700,
-              letterSpacing: _isCompact ? -0.3 : -0.65,
+              letterSpacing: _isCompact ? -0.35 : -0.7,
             ),
           ),
         ),
         SizedBox(height: _isCompact ? AppSpacing.sm : AppSpacing.md),
         ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 700),
+          constraints: const BoxConstraints(maxWidth: 690),
           child: Text(
-            _isCompact
-                ? '3+ years building and shipping production '
-                      'Flutter apps across architecture, APIs, '
-                      'local data, maintenance, testing, and '
-                      'Android/iOS releases.'
-                : '3+ years of professional experience owning '
-                      'Flutter architecture, responsive UI, '
-                      'REST API integration, local persistence, '
-                      'maintenance, device testing, and '
-                      'Android/iOS production releases.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSecondary,
-              height: _isCompact ? 1.5 : 1.65,
+            '3+ years building production Flutter applications '
+            'across responsive UI, application architecture, '
+            'REST APIs, local persistence, maintenance, device '
+            'testing, and Android/iOS release workflows.',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: colors.onSurface.withValues(alpha: 0.66),
               fontSize: _isCompact ? 14 : 16.5,
+              height: _isCompact ? 1.52 : 1.62,
             ),
           ),
         ),
-        SizedBox(height: _isCompact ? AppSpacing.md : AppSpacing.xl),
-        Wrap(
-          spacing: AppSpacing.xs,
-          runSpacing: AppSpacing.xs,
-          children: [
-            _CapabilityChip(
-              compact: _isCompact,
-              icon: Icons.phone_android_rounded,
-              label: 'Android & iOS',
-            ),
-            _CapabilityChip(
-              compact: _isCompact,
-              icon: Icons.rocket_launch_rounded,
-              label: 'Production Releases',
-            ),
-            _CapabilityChip(
-              compact: _isCompact,
-              icon: Icons.account_tree_outlined,
-              label: 'Architecture',
-            ),
-          ],
-        ),
+        SizedBox(height: _isCompact ? AppSpacing.lg : AppSpacing.xl),
+        _TechSignalGrid(compact: _isCompact),
         SizedBox(height: _isCompact ? AppSpacing.lg : AppSpacing.xl),
         Wrap(
           spacing: AppSpacing.sm,
@@ -369,24 +290,24 @@ class _HeroContent extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: _isCompact ? AppSpacing.sm : AppSpacing.lg),
+        SizedBox(height: _isCompact ? AppSpacing.sm : AppSpacing.md),
         Wrap(
           spacing: AppSpacing.xxs,
           runSpacing: AppSpacing.xxs,
           children: [
-            _SocialButton(
+            _SocialAction(
               compact: _isCompact,
               icon: Icons.work_outline_rounded,
               label: 'LinkedIn',
               onPressed: onLinkedInPressed,
             ),
-            _SocialButton(
+            _SocialAction(
               compact: _isCompact,
               icon: Icons.code_rounded,
               label: 'GitHub',
               onPressed: onGitHubPressed,
             ),
-            _SocialButton(
+            _SocialAction(
               compact: _isCompact,
               icon: Icons.chat_bubble_outline_rounded,
               label: 'WhatsApp',
@@ -399,47 +320,44 @@ class _HeroContent extends StatelessWidget {
   }
 }
 
-class _AvailabilityBadge extends StatelessWidget {
-  const _AvailabilityBadge({required this.compact});
-
-  final bool compact;
+class _SystemStatusBadge extends StatelessWidget {
+  const _SystemStatusBadge();
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.accent.withValues(alpha: 0.07),
+        color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.24)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.28)),
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? AppSpacing.sm : AppSpacing.md,
-          vertical: compact ? 7 : AppSpacing.xs,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: 7,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.accent,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.accent.withValues(alpha: 0.50),
-                    blurRadius: 8,
-                  ),
-                ],
+            const SizedBox(
+              width: 7,
+              height: 7,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.success,
+                  shape: BoxShape.circle,
+                ),
               ),
-              child: const SizedBox(width: 7, height: 7),
             ),
             const SizedBox(width: AppSpacing.xs),
             Text(
               '3+ YEARS • PRODUCTION FLUTTER',
               style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: compact ? 9.5 : 11.5,
-                letterSpacing: compact ? 0.6 : 1.05,
+                color: colors.onSurface.withValues(alpha: 0.76),
+                fontSize: 10.5,
+                letterSpacing: 0.9,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -450,59 +368,109 @@ class _AvailabilityBadge extends StatelessWidget {
   }
 }
 
-class _PortfolioIndex extends StatelessWidget {
-  const _PortfolioIndex();
+class _MicroLabel extends StatelessWidget {
+  const _MicroLabel({required this.text});
+
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
-      '01 / PORTFOLIO',
+    final colors = Theme.of(context).colorScheme;
+
+    return Text(
+      text,
       style: TextStyle(
-        color: AppColors.textSubtle,
-        fontSize: 10.5,
-        letterSpacing: 1.5,
+        color: colors.onSurface.withValues(alpha: 0.38),
+        fontSize: 10,
+        letterSpacing: 1.6,
         fontWeight: FontWeight.w700,
       ),
     );
   }
 }
 
-class _RoleSeparator extends StatelessWidget {
-  const _RoleSeparator();
+class _TechSignalGrid extends StatelessWidget {
+  const _TechSignalGrid({required this.compact});
+
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 4,
-      height: 4,
-      decoration: const BoxDecoration(
-        color: AppColors.textMuted,
-        shape: BoxShape.circle,
+    final items = [
+      (
+        icon: Icons.account_tree_outlined,
+        value: 'Architecture',
+        caption: 'Scalable Flutter structure',
       ),
+      (
+        icon: Icons.hub_outlined,
+        value: 'API Systems',
+        caption: 'REST & app integration',
+      ),
+      (
+        icon: Icons.rocket_launch_outlined,
+        value: 'Release',
+        caption: 'Android & iOS delivery',
+      ),
+    ];
+
+    if (compact) {
+      return Column(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            _TechSignalCard(
+              icon: items[i].icon,
+              value: items[i].value,
+              caption: items[i].caption,
+              compact: true,
+            ),
+            if (i != items.length - 1) const SizedBox(height: AppSpacing.xs),
+          ],
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        for (var i = 0; i < items.length; i++) ...[
+          Expanded(
+            child: _TechSignalCard(
+              icon: items[i].icon,
+              value: items[i].value,
+              caption: items[i].caption,
+            ),
+          ),
+          if (i != items.length - 1) const SizedBox(width: AppSpacing.xs),
+        ],
+      ],
     );
   }
 }
 
-class _CapabilityChip extends StatefulWidget {
-  const _CapabilityChip({
-    required this.compact,
+class _TechSignalCard extends StatefulWidget {
+  const _TechSignalCard({
     required this.icon,
-    required this.label,
+    required this.value,
+    required this.caption,
+    this.compact = false,
   });
 
-  final bool compact;
   final IconData icon;
-  final String label;
+  final String value;
+  final String caption;
+  final bool compact;
 
   @override
-  State<_CapabilityChip> createState() => _CapabilityChipState();
+  State<_TechSignalCard> createState() => _TechSignalCardState();
 }
 
-class _CapabilityChipState extends State<_CapabilityChip> {
+class _TechSignalCardState extends State<_TechSignalCard> {
   bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return MouseRegion(
       cursor: SystemMouseCursors.basic,
       onEnter: (_) {
@@ -518,47 +486,59 @@ class _CapabilityChipState extends State<_CapabilityChip> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
+        transform: Matrix4.translationValues(0, _hovered ? -3 : 0, 0),
+        padding: EdgeInsets.all(widget.compact ? AppSpacing.sm : AppSpacing.md),
         decoration: BoxDecoration(
           color: _hovered
-              ? AppColors.surfaceSoft
-              : AppColors.surface.withValues(alpha: 0.72),
-          borderRadius: BorderRadius.circular(AppRadius.pill),
+              ? colors.primary.withValues(alpha: 0.08)
+              : colors.surface.withValues(alpha: 0.55),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color: _hovered ? AppColors.borderAccent : AppColors.border,
+            color: _hovered
+                ? AppColors.primary.withValues(alpha: 0.48)
+                : colors.outline.withValues(alpha: 0.72),
           ),
-          boxShadow: _hovered
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    blurRadius: 16,
-                  ),
-                ]
-              : null,
         ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: widget.compact ? AppSpacing.sm : AppSpacing.md,
-            vertical: widget.compact ? 7 : AppSpacing.sm,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                widget.icon,
-                size: widget.compact ? 14 : 16,
-                color: AppColors.primary,
+        child: Row(
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              SizedBox(width: widget.compact ? AppSpacing.xxs : AppSpacing.xs),
-              Text(
-                widget.label,
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: widget.compact ? 11 : 12.5,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: SizedBox(
+                width: 38,
+                height: 38,
+                child: Icon(widget.icon, size: 18, color: AppColors.primary),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.value,
+                    style: TextStyle(
+                      color: colors.onSurface,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    widget.caption,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: colors.onSurface.withValues(alpha: 0.48),
+                      fontSize: 10.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -612,15 +592,14 @@ class _PrimaryActionState extends State<_PrimaryAction> {
         child: DecoratedBox(
           decoration: BoxDecoration(
             gradient: enabled ? AppColors.futuristicGradient : null,
-            color: enabled ? null : AppColors.surfaceSoft,
             borderRadius: BorderRadius.circular(AppRadius.md),
             boxShadow: enabled
                 ? [
                     BoxShadow(
                       color: AppColors.primary.withValues(
-                        alpha: _hovered ? 0.30 : 0.17,
+                        alpha: _hovered ? 0.28 : 0.16,
                       ),
-                      blurRadius: _hovered ? 30 : 18,
+                      blurRadius: _hovered ? 26 : 16,
                     ),
                   ]
                 : null,
@@ -631,7 +610,6 @@ class _PrimaryActionState extends State<_PrimaryAction> {
               backgroundColor: AppColors.transparent,
               foregroundColor: AppColors.white,
               disabledBackgroundColor: AppColors.transparent,
-              disabledForegroundColor: AppColors.textMuted,
               shadowColor: AppColors.transparent,
               padding: EdgeInsets.symmetric(
                 horizontal: widget.compact ? AppSpacing.md : AppSpacing.lg,
@@ -678,6 +656,7 @@ class _SecondaryActionState extends State<_SecondaryAction> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final enabled = widget.onPressed != null;
 
     return MouseRegion(
@@ -704,12 +683,13 @@ class _SecondaryActionState extends State<_SecondaryAction> {
           onPressed: widget.onPressed,
           style: OutlinedButton.styleFrom(
             backgroundColor: _hovered
-                ? AppColors.surfaceSoft.withValues(alpha: 0.82)
-                : AppColors.surface.withValues(alpha: 0.55),
-            foregroundColor: AppColors.textPrimary,
-            disabledForegroundColor: AppColors.textMuted,
+                ? colors.primary.withValues(alpha: 0.08)
+                : colors.surface.withValues(alpha: 0.52),
+            foregroundColor: colors.onSurface,
             side: BorderSide(
-              color: _hovered ? AppColors.borderAccent : AppColors.borderStrong,
+              color: _hovered
+                  ? AppColors.primary.withValues(alpha: 0.50)
+                  : colors.outline,
             ),
             padding: EdgeInsets.symmetric(
               horizontal: widget.compact ? AppSpacing.md : AppSpacing.lg,
@@ -733,8 +713,8 @@ class _SecondaryActionState extends State<_SecondaryAction> {
   }
 }
 
-class _SocialButton extends StatefulWidget {
-  const _SocialButton({
+class _SocialAction extends StatefulWidget {
+  const _SocialAction({
     required this.compact,
     required this.icon,
     required this.label,
@@ -747,14 +727,16 @@ class _SocialButton extends StatefulWidget {
   final VoidCallback onPressed;
 
   @override
-  State<_SocialButton> createState() => _SocialButtonState();
+  State<_SocialAction> createState() => _SocialActionState();
 }
 
-class _SocialButtonState extends State<_SocialButton> {
+class _SocialActionState extends State<_SocialAction> {
   bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) {
@@ -767,35 +749,29 @@ class _SocialButtonState extends State<_SocialButton> {
           _hovered = false;
         });
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        decoration: BoxDecoration(
-          color: _hovered
-              ? AppColors.primary.withValues(alpha: 0.07)
+      child: TextButton.icon(
+        onPressed: widget.onPressed,
+        style: TextButton.styleFrom(
+          foregroundColor: _hovered
+              ? AppColors.primary
+              : colors.onSurface.withValues(alpha: 0.62),
+          backgroundColor: _hovered
+              ? AppColors.primary.withValues(alpha: 0.06)
               : AppColors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-        ),
-        child: TextButton.icon(
-          onPressed: widget.onPressed,
-          style: TextButton.styleFrom(
-            foregroundColor: _hovered
-                ? AppColors.primary
-                : AppColors.textSecondary,
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.compact ? AppSpacing.xs : AppSpacing.sm,
-              vertical: widget.compact ? 6 : AppSpacing.sm,
-            ),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(AppRadius.sm)),
-            ),
+          padding: EdgeInsets.symmetric(
+            horizontal: widget.compact ? AppSpacing.xs : AppSpacing.sm,
+            vertical: widget.compact ? 6 : 9,
           ),
-          icon: Icon(widget.icon, size: widget.compact ? 15 : 17),
-          label: Text(
-            widget.label,
-            style: TextStyle(
-              fontSize: widget.compact ? 11.5 : 12.5,
-              fontWeight: FontWeight.w600,
-            ),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(AppRadius.sm)),
+          ),
+        ),
+        icon: Icon(widget.icon, size: widget.compact ? 15 : 17),
+        label: Text(
+          widget.label,
+          style: TextStyle(
+            fontSize: widget.compact ? 11.5 : 12.5,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -803,22 +779,17 @@ class _SocialButtonState extends State<_SocialButton> {
   }
 }
 
-class _HeroMotionPortrait extends StatefulWidget {
-  const _HeroMotionPortrait({
-    this.compact = false,
-    this.parallax = Offset.zero,
-  });
-
-  final bool compact;
-  final Offset parallax;
+class _TechPortraitSystem extends StatefulWidget {
+  const _TechPortraitSystem();
 
   @override
-  State<_HeroMotionPortrait> createState() => _HeroMotionPortraitState();
+  State<_TechPortraitSystem> createState() => _TechPortraitSystemState();
 }
 
-class _HeroMotionPortraitState extends State<_HeroMotionPortrait>
+class _TechPortraitSystemState extends State<_TechPortraitSystem>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  bool _hovered = false;
 
   @override
   void initState() {
@@ -826,7 +797,7 @@ class _HeroMotionPortraitState extends State<_HeroMotionPortrait>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 6),
+      duration: const Duration(seconds: 18),
     );
   }
 
@@ -837,7 +808,7 @@ class _HeroMotionPortraitState extends State<_HeroMotionPortrait>
     final disableAnimations =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
-    if (disableAnimations || widget.compact) {
+    if (disableAnimations) {
       _controller.stop();
       _controller.value = 0;
       return;
@@ -849,23 +820,6 @@ class _HeroMotionPortraitState extends State<_HeroMotionPortrait>
   }
 
   @override
-  void didUpdateWidget(covariant _HeroMotionPortrait oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (oldWidget.compact != widget.compact) {
-      final disableAnimations =
-          MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-
-      if (disableAnimations || widget.compact) {
-        _controller.stop();
-        _controller.value = 0;
-      } else if (!_controller.isAnimating) {
-        _controller.repeat();
-      }
-    }
-  }
-
-  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -873,47 +827,10 @@ class _HeroMotionPortraitState extends State<_HeroMotionPortrait>
 
   @override
   Widget build(BuildContext context) {
-    final disableAnimations =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    if (disableAnimations) {
-      return Transform.translate(
-        offset: widget.parallax,
-        child: _HeroPortrait(compact: widget.compact),
-      );
-    }
-
-    return AnimatedBuilder(
-      animation: _controller,
-      child: RepaintBoundary(child: _HeroPortrait(compact: widget.compact)),
-      builder: (context, child) {
-        final floatingY = widget.compact
-            ? 0.0
-            : math.sin(_controller.value * math.pi * 2) * 4;
-
-        return Transform.translate(
-          offset: Offset(widget.parallax.dx, widget.parallax.dy + floatingY),
-          child: child,
-        );
-      },
-    );
-  }
-}
-
-class _HeroPortrait extends StatefulWidget {
-  const _HeroPortrait({this.compact = false});
-
-  final bool compact;
-
-  @override
-  State<_HeroPortrait> createState() => _HeroPortraitState();
-}
-
-class _HeroPortraitState extends State<_HeroPortrait> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
     return MouseRegion(
       cursor: SystemMouseCursors.basic,
       onEnter: (_) {
@@ -926,90 +843,215 @@ class _HeroPortraitState extends State<_HeroPortrait> {
           _hovered = false;
         });
       },
-      child: AnimatedScale(
-        scale: _hovered && !widget.compact ? 1.012 : 1,
-        duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
-        child: AspectRatio(
-          aspectRatio: widget.compact ? 0.92 : 0.84,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                top: widget.compact ? 8 : 14,
-                left: widget.compact ? 8 : 14,
-                right: widget.compact ? -8 : -14,
-                bottom: widget.compact ? -8 : -14,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(
-                      widget.compact ? AppRadius.lg : AppRadius.xl,
-                    ),
-                    border: Border.all(
-                      color: AppColors.secondary.withValues(alpha: 0.22),
-                    ),
-                  ),
+      child: AspectRatio(
+        aspectRatio: 0.88,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _OrbitPainter(
+                  animation: _controller,
+                  primary: AppColors.primary,
+                  secondary: AppColors.secondary,
+                  accent: AppColors.accent,
+                  isDark: isDark,
                 ),
               ),
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(
-                      widget.compact ? AppRadius.lg : AppRadius.xl,
+            ),
+            Positioned(
+              left: 42,
+              right: 42,
+              top: 52,
+              bottom: 78,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                transform: Matrix4.diagonal3Values(
+                  _hovered ? 1.012 : 1.0,
+                  _hovered ? 1.012 : 1.0,
+                  1,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
+                  border: Border.all(
+                    color: _hovered
+                        ? AppColors.primary.withValues(alpha: 0.56)
+                        : colors.outline,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.black.withValues(
+                        alpha: isDark ? 0.30 : 0.10,
+                      ),
+                      blurRadius: 34,
+                      offset: const Offset(0, 18),
                     ),
-                    gradient: AppColors.surfaceGradient,
-                    border: Border.all(
-                      color: _hovered
-                          ? AppColors.borderAccent
-                          : AppColors.borderStrong,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(
-                          alpha: _hovered ? 0.18 : 0.10,
-                        ),
-                        blurRadius: _hovered ? 54 : 38,
-                        spreadRadius: 1,
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.xl - 1),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.asset(
+                        'assets/asif_ahmed_photo_optimized.jpg',
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        semanticLabel: 'MD. Asif Ahmed',
+                      ),
+                      const _PortraitOverlay(),
+                      const Positioned(
+                        top: AppSpacing.md,
+                        right: AppSpacing.md,
+                        child: _FlutterBadge(),
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(
-                      widget.compact ? AppRadius.lg - 1 : AppRadius.xl - 1,
-                    ),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.asset(
-                          'assets/asif_ahmed_photo_optimized.jpg',
-                          fit: BoxFit.cover,
-                          alignment: Alignment.topCenter,
-                          semanticLabel: 'MD. Asif Ahmed',
-                        ),
-                        const _PortraitOverlay(),
-                        Positioned(
-                          left: widget.compact ? AppSpacing.sm : AppSpacing.md,
-                          right: widget.compact ? AppSpacing.sm : AppSpacing.md,
-                          bottom: widget.compact
-                              ? AppSpacing.sm
-                              : AppSpacing.md,
-                          child: _PortraitInfoCard(compact: widget.compact),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
-              Positioned(
-                top: widget.compact ? 14 : 20,
-                right: widget.compact ? 14 : 20,
-                child: _LiveBadge(compact: widget.compact),
-              ),
-            ],
-          ),
+            ),
+            Positioned(
+              left: 18,
+              right: 18,
+              bottom: 18,
+              child: _DeveloperConsole(isDark: isDark),
+            ),
+          ],
         ),
       ),
     );
+  }
+}
+
+class _OrbitPainter extends CustomPainter {
+  _OrbitPainter({
+    required this.animation,
+    required this.primary,
+    required this.secondary,
+    required this.accent,
+    required this.isDark,
+  }) : super(repaint: animation);
+
+  final Animation<double> animation;
+  final Color primary;
+  final Color secondary;
+  final Color accent;
+  final bool isDark;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height * 0.46);
+
+    final phase = animation.value * math.pi * 2;
+
+    final orbitPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..isAntiAlias = true;
+
+    final nodePaint = Paint()
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    void orbit({
+      required double width,
+      required double height,
+      required Color color,
+      required double speed,
+      required double offset,
+      required double radius,
+    }) {
+      orbitPaint.color = color.withValues(alpha: isDark ? 0.12 : 0.16);
+
+      final rect = Rect.fromCenter(
+        center: center,
+        width: width,
+        height: height,
+      );
+
+      canvas.drawOval(rect, orbitPaint);
+
+      final angle = phase * speed + offset;
+
+      final point = Offset(
+        center.dx + math.cos(angle) * (width / 2),
+        center.dy + math.sin(angle) * (height / 2),
+      );
+
+      nodePaint.color = color.withValues(alpha: isDark ? 0.82 : 0.92);
+
+      canvas.drawCircle(point, radius, nodePaint);
+    }
+
+    orbit(
+      width: size.width * 0.86,
+      height: size.height * 0.56,
+      color: primary,
+      speed: 0.74,
+      offset: 0,
+      radius: 3.5,
+    );
+
+    orbit(
+      width: size.width * 0.70,
+      height: size.height * 0.72,
+      color: secondary,
+      speed: -0.55,
+      offset: math.pi * 0.46,
+      radius: 3.2,
+    );
+
+    orbit(
+      width: size.width * 0.96,
+      height: size.height * 0.38,
+      color: accent,
+      speed: 0.42,
+      offset: math.pi,
+      radius: 2.8,
+    );
+
+    _paintBubbles(canvas, size, phase);
+  }
+
+  void _paintBubbles(Canvas canvas, Size size, double phase) {
+    const seeds = [
+      (0.09, 0.17, 2.4, 16.0, 10.0, 0.2),
+      (0.82, 0.19, 3.0, 13.0, 14.0, 0.8),
+      (0.12, 0.69, 2.5, 18.0, 12.0, 1.6),
+      (0.88, 0.64, 2.8, 16.0, 14.0, 2.2),
+      (0.23, 0.87, 2.2, 13.0, 10.0, 2.8),
+      (0.74, 0.89, 2.6, 14.0, 11.0, 3.4),
+    ];
+
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    for (var i = 0; i < seeds.length; i++) {
+      final seed = seeds[i];
+
+      final x = size.width * seed.$1 + math.sin(phase + seed.$6) * seed.$4;
+
+      final y =
+          size.height * seed.$2 + math.cos(phase * 0.78 + seed.$6) * seed.$5;
+
+      final color = i.isEven ? primary : secondary;
+
+      paint.color = color.withValues(alpha: isDark ? 0.38 : 0.48);
+
+      canvas.drawCircle(Offset(x, y), seed.$3, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _OrbitPainter oldDelegate) {
+    return oldDelegate.primary != primary ||
+        oldDelegate.secondary != secondary ||
+        oldDelegate.accent != accent ||
+        oldDelegate.isDark != isDark;
   }
 }
 
@@ -1018,47 +1060,46 @@ class _PortraitOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const DecoratedBox(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0x00050914), Color(0x12030712), Color(0xD9030712)],
-          stops: [0.45, 0.68, 1],
+          colors: isDark
+              ? const [Color(0x00030712), Color(0x16030712), Color(0xE8030712)]
+              : const [Color(0x00FFFFFF), Color(0x08030712), Color(0xB3030712)],
+          stops: const [0.48, 0.68, 1],
         ),
       ),
     );
   }
 }
 
-class _LiveBadge extends StatelessWidget {
-  const _LiveBadge({required this.compact});
-
-  final bool compact;
+class _FlutterBadge extends StatelessWidget {
+  const _FlutterBadge();
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.background.withValues(alpha: 0.82),
+        color: AppColors.background.withValues(alpha: 0.78),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.28)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.34)),
       ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 8 : 10,
-          vertical: compact ? 5 : 7,
-        ),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.circle, size: 6, color: AppColors.accent),
-            const SizedBox(width: 6),
+            Icon(Icons.flutter_dash_rounded, size: 14, color: AppColors.white),
+            SizedBox(width: 6),
             Text(
               'FLUTTER',
               style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: compact ? 8.5 : 10,
+                color: AppColors.white,
+                fontSize: 9.5,
                 letterSpacing: 1,
                 fontWeight: FontWeight.w800,
               ),
@@ -1070,72 +1111,80 @@ class _LiveBadge extends StatelessWidget {
   }
 }
 
-class _PortraitInfoCard extends StatelessWidget {
-  const _PortraitInfoCard({required this.compact});
+class _DeveloperConsole extends StatelessWidget {
+  const _DeveloperConsole({required this.isDark});
 
-  final bool compact;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.surfaceGlass,
-        borderRadius: BorderRadius.circular(
-          compact ? AppRadius.md : AppRadius.lg,
-        ),
-        border: Border.all(color: AppColors.borderStrong),
+        color: colors.surface.withValues(alpha: isDark ? 0.93 : 0.96),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: colors.outline),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: AppColors.black.withValues(alpha: isDark ? 0.25 : 0.08),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(compact ? AppSpacing.sm : AppSpacing.md),
-        child: Row(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: AppColors.brandGradient,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: SizedBox(
-                width: compact ? 32 : 40,
-                height: compact ? 32 : 40,
-                child: Icon(
-                  Icons.flutter_dash_rounded,
-                  color: AppColors.white,
-                  size: compact ? 18 : 22,
+            Row(
+              children: [
+                const _ConsoleDot(color: AppColors.error),
+                const SizedBox(width: 5),
+                const _ConsoleDot(color: AppColors.warning),
+                const SizedBox(width: 5),
+                const _ConsoleDot(color: AppColors.success),
+                const Spacer(),
+                Text(
+                  'DEV / SYSTEM',
+                  style: TextStyle(
+                    color: colors.onSurface.withValues(alpha: 0.38),
+                    fontSize: 8.5,
+                    letterSpacing: 1.3,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
+              ],
             ),
-            SizedBox(width: compact ? AppSpacing.xs : AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Flutter Developer',
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                const Icon(
+                  Icons.terminal_rounded,
+                  color: AppColors.primary,
+                  size: 17,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    'Flutter • Dart • REST • SQLite',
                     style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: compact ? 11.5 : 13.5,
-                      fontWeight: FontWeight.w800,
+                      color: colors.onSurface,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  if (!compact) ...[
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Architecture • UI • APIs • Releases',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 11,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '> production-ready mobile systems',
+              style: TextStyle(
+                color: colors.onSurface.withValues(alpha: 0.52),
+                fontSize: 10.5,
+                height: 1.35,
               ),
             ),
           ],
@@ -1145,19 +1194,48 @@ class _PortraitInfoCard extends StatelessWidget {
   }
 }
 
-class _HeroBackground extends StatelessWidget {
-  const _HeroBackground();
+class _ConsoleDot extends StatelessWidget {
+  const _ConsoleDot({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 7,
+      height: 7,
+      child: DecoratedBox(
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+    );
+  }
+}
+
+class _HeroStaticBackground extends StatelessWidget {
+  const _HeroStaticBackground({required this.isDark});
+
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _HeroGridPainter(),
-      child: const DecoratedBox(
+      painter: _StaticTechGridPainter(isDark: isDark),
+      child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0D172A), Color(0xFF070D1A), Color(0xFF030712)],
+            colors: isDark
+                ? const [
+                    Color(0xFF0D172A),
+                    Color(0xFF070D1A),
+                    Color(0xFF030712),
+                  ]
+                : const [
+                    Color(0xFFFFFFFF),
+                    Color(0xFFF7F9FD),
+                    Color(0xFFEDF1F8),
+                  ],
           ),
         ),
       ),
@@ -1165,14 +1243,18 @@ class _HeroBackground extends StatelessWidget {
   }
 }
 
-class _HeroGridPainter extends CustomPainter {
+class _StaticTechGridPainter extends CustomPainter {
+  const _StaticTechGridPainter({required this.isDark});
+
+  final bool isDark;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.035)
+      ..color = AppColors.primary.withValues(alpha: isDark ? 0.035 : 0.055)
       ..strokeWidth = 1;
 
-    const spacing = 48.0;
+    const spacing = 52.0;
 
     for (double x = 0; x <= size.width; x += spacing) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
@@ -1184,51 +1266,13 @@ class _HeroGridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+  bool shouldRepaint(covariant _StaticTechGridPainter oldDelegate) {
+    return oldDelegate.isDark != isDark;
   }
 }
 
-class _TopAccent extends StatelessWidget {
-  const _TopAccent();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 96,
-      height: 2,
-      decoration: const BoxDecoration(gradient: AppColors.futuristicGradient),
-    );
-  }
-}
-
-class _CursorGlow extends StatelessWidget {
-  const _CursorGlow();
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: 420,
-        height: 420,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              AppColors.primary.withValues(alpha: 0.10),
-              AppColors.secondary.withValues(alpha: 0.045),
-              AppColors.transparent,
-            ],
-            stops: const [0, 0.46, 1],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({
+class _StaticGlow extends StatelessWidget {
+  const _StaticGlow({
     required this.size,
     required this.color,
     required this.opacity,
@@ -1241,16 +1285,18 @@ class _GlowOrb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: Container(
+      child: SizedBox(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              color.withValues(alpha: opacity),
-              color.withValues(alpha: 0),
-            ],
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                color.withValues(alpha: opacity),
+                color.withValues(alpha: 0),
+              ],
+            ),
           ),
         ),
       ),

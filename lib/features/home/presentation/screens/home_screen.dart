@@ -6,6 +6,7 @@ import '../../../../core/responsive/app_breakpoints.dart';
 import '../../../../core/responsive/responsive_layout.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/services/external_link_service.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../widgets/about_section.dart';
 import '../widgets/animated_portfolio_background.dart';
@@ -114,141 +115,84 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      body: Column(
-        children: [
-          PortfolioNavbar(
-            activeSection: PortfolioSection.home,
-            enabledSections: _enabledSections,
-            onSectionSelected: _handleSectionSelected,
-            onResumePressed: _viewResume,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? const [
+                    AppColors.background,
+                    AppColors.backgroundSoft,
+                    AppColors.background,
+                  ]
+                : const [
+                    AppColors.lightBackground,
+                    AppColors.lightBackgroundSoft,
+                    AppColors.lightBackground,
+                  ],
           ),
-          Expanded(
-            child: ResponsiveLayout(
-              builder: (context, windowSize, _) {
-                final horizontalPadding = switch (windowSize) {
-                  AppWindowSize.compact => AppSpacing.md,
-                  AppWindowSize.medium => AppSpacing.xl,
-                  AppWindowSize.expanded => AppSpacing.xxl,
-                };
+        ),
+        child: Column(
+          children: [
+            PortfolioNavbar(
+              activeSection: PortfolioSection.home,
+              enabledSections: _enabledSections,
+              onSectionSelected: _handleSectionSelected,
+              onResumePressed: _viewResume,
+            ),
+            Expanded(
+              child: ResponsiveLayout(
+                builder: (context, windowSize, _) {
+                  final horizontalPadding = switch (windowSize) {
+                    AppWindowSize.compact => AppSpacing.md,
+                    AppWindowSize.medium => AppSpacing.xl,
+                    AppWindowSize.expanded => AppSpacing.xxl,
+                  };
 
-                final sectionGap = switch (windowSize) {
-                  AppWindowSize.compact => AppSpacing.lg,
-                  AppWindowSize.medium => AppSpacing.xl,
-                  AppWindowSize.expanded => AppSpacing.xxl,
-                };
+                  final sectionGap = switch (windowSize) {
+                    AppWindowSize.compact => AppSpacing.lg,
+                    AppWindowSize.medium => AppSpacing.xl,
+                    AppWindowSize.expanded => AppSpacing.xxl,
+                  };
 
-                return Stack(
-                  children: [
-                    Positioned.fill(
-                      child: AnimatedPortfolioBackground(
-                        compact: windowSize == AppWindowSize.compact,
+                  return Stack(
+                    children: [
+                      Positioned.fill(
+                        child: AnimatedPortfolioBackground(
+                          compact: windowSize == AppWindowSize.compact,
+                        ),
                       ),
-                    ),
-                    SingleChildScrollView(
-                      controller: _scrollController,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                        vertical: switch (windowSize) {
-                          AppWindowSize.compact => AppSpacing.md,
-                          AppWindowSize.medium => AppSpacing.xl,
-                          AppWindowSize.expanded => AppSpacing.xxl,
-                        },
-                      ),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: AppBreakpoints.maxContentWidth,
-                          ),
-                          child: Column(
-                            children: [
-                              HeroSection(
-                                windowSize: windowSize,
-                                onViewProjectsPressed: () {
-                                  _scrollToSection(_projectsSectionKey);
-                                },
-                                onResumePressed: _viewResume,
-                                onLinkedInPressed: () {
-                                  _openExternalLink(AppLinks.linkedIn);
-                                },
-                                onGitHubPressed: () {
-                                  _openExternalLink(AppLinks.github);
-                                },
-                                onWhatsAppPressed: () {
-                                  _openExternalLink(AppLinks.whatsapp);
-                                },
-                              ),
-                              SizedBox(height: sectionGap),
-                              ScrollReveal(
-                                controller: _scrollController,
-                                child: CredibilityStrip(windowSize: windowSize),
-                              ),
-                              SizedBox(height: sectionGap),
-                              KeyedSubtree(
-                                key: _aboutSectionKey,
-                                child: ScrollReveal(
-                                  controller: _scrollController,
-                                  child: AboutSection(windowSize: windowSize),
-                                ),
-                              ),
-                              SizedBox(height: sectionGap),
-                              KeyedSubtree(
-                                key: _experienceSectionKey,
-                                child: ScrollReveal(
-                                  controller: _scrollController,
-                                  child: ExperienceSection(
-                                    windowSize: windowSize,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: sectionGap),
-                              KeyedSubtree(
-                                key: _projectsSectionKey,
-                                child: ScrollReveal(
-                                  controller: _scrollController,
-                                  child: ProjectsSection(
-                                    windowSize: windowSize,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: sectionGap),
-                              KeyedSubtree(
-                                key: _skillsSectionKey,
-                                child: ScrollReveal(
-                                  controller: _scrollController,
-                                  child: SkillsSection(windowSize: windowSize),
-                                ),
-                              ),
-                              SizedBox(height: sectionGap),
-                              KeyedSubtree(
-                                key: _contactSectionKey,
-                                child: ScrollReveal(
-                                  controller: _scrollController,
-                                  child: ContactSection(
-                                    windowSize: windowSize,
-                                    onEmailPressed: () {
-                                      _openExternalLink(AppLinks.email);
-                                    },
-                                    onWhatsAppPressed: () {
-                                      _openExternalLink(AppLinks.whatsapp);
-                                    },
-                                    onLinkedInPressed: () {
-                                      _openExternalLink(AppLinks.linkedIn);
-                                    },
-                                    onGitHubPressed: () {
-                                      _openExternalLink(AppLinks.github);
-                                    },
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: sectionGap),
-                              ScrollReveal(
-                                controller: _scrollController,
-                                child: PortfolioFooter(
+                      SingleChildScrollView(
+                        controller: _scrollController,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                          vertical: switch (windowSize) {
+                            AppWindowSize.compact => AppSpacing.md,
+                            AppWindowSize.medium => AppSpacing.xl,
+                            AppWindowSize.expanded => AppSpacing.xxl,
+                          },
+                        ),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: AppBreakpoints.maxContentWidth,
+                            ),
+                            child: Column(
+                              children: [
+                                HeroSection(
                                   windowSize: windowSize,
-                                  onEmailPressed: () {
-                                    _openExternalLink(AppLinks.email);
+                                  onViewProjectsPressed: () {
+                                    _scrollToSection(_projectsSectionKey);
                                   },
+                                  onResumePressed: _viewResume,
                                   onLinkedInPressed: () {
                                     _openExternalLink(AppLinks.linkedIn);
                                   },
@@ -258,26 +202,112 @@ class _HomeScreenState extends State<HomeScreen> {
                                   onWhatsAppPressed: () {
                                     _openExternalLink(AppLinks.whatsapp);
                                   },
-                                  onBackToTopPressed: _scrollToTop,
                                 ),
-                              ),
-                            ],
+                                SizedBox(height: sectionGap),
+                                ScrollReveal(
+                                  controller: _scrollController,
+                                  child: CredibilityStrip(
+                                    windowSize: windowSize,
+                                  ),
+                                ),
+                                SizedBox(height: sectionGap),
+                                KeyedSubtree(
+                                  key: _aboutSectionKey,
+                                  child: ScrollReveal(
+                                    controller: _scrollController,
+                                    child: AboutSection(windowSize: windowSize),
+                                  ),
+                                ),
+                                SizedBox(height: sectionGap),
+                                KeyedSubtree(
+                                  key: _experienceSectionKey,
+                                  child: ScrollReveal(
+                                    controller: _scrollController,
+                                    child: ExperienceSection(
+                                      windowSize: windowSize,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: sectionGap),
+                                KeyedSubtree(
+                                  key: _projectsSectionKey,
+                                  child: ScrollReveal(
+                                    controller: _scrollController,
+                                    child: ProjectsSection(
+                                      windowSize: windowSize,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: sectionGap),
+                                KeyedSubtree(
+                                  key: _skillsSectionKey,
+                                  child: ScrollReveal(
+                                    controller: _scrollController,
+                                    child: SkillsSection(
+                                      windowSize: windowSize,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: sectionGap),
+                                KeyedSubtree(
+                                  key: _contactSectionKey,
+                                  child: ScrollReveal(
+                                    controller: _scrollController,
+                                    child: ContactSection(
+                                      windowSize: windowSize,
+                                      onEmailPressed: () {
+                                        _openExternalLink(AppLinks.email);
+                                      },
+                                      onWhatsAppPressed: () {
+                                        _openExternalLink(AppLinks.whatsapp);
+                                      },
+                                      onLinkedInPressed: () {
+                                        _openExternalLink(AppLinks.linkedIn);
+                                      },
+                                      onGitHubPressed: () {
+                                        _openExternalLink(AppLinks.github);
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: sectionGap),
+                                ScrollReveal(
+                                  controller: _scrollController,
+                                  child: PortfolioFooter(
+                                    windowSize: windowSize,
+                                    onEmailPressed: () {
+                                      _openExternalLink(AppLinks.email);
+                                    },
+                                    onLinkedInPressed: () {
+                                      _openExternalLink(AppLinks.linkedIn);
+                                    },
+                                    onGitHubPressed: () {
+                                      _openExternalLink(AppLinks.github);
+                                    },
+                                    onWhatsAppPressed: () {
+                                      _openExternalLink(AppLinks.whatsapp);
+                                    },
+                                    onBackToTopPressed: _scrollToTop,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Positioned.fill(
-                      child: AnimatedPortfolioBackground(
-                        compact: windowSize == AppWindowSize.compact,
-                        overlay: true,
+                      Positioned.fill(
+                        child: AnimatedPortfolioBackground(
+                          compact: windowSize == AppWindowSize.compact,
+                          overlay: true,
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

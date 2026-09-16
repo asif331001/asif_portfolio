@@ -105,7 +105,7 @@ abstract final class PortfolioProjects {
     featureGraphic:
         'assets/feature_graphics_optimized/genesis_bcscare_feature_graphic.jpg',
     logoAssets: ['assets/project_logos_optimized/genesis_bcscare_logo.png'],
-    platformLabel: 'Flutter Mobile App',
+    platformLabel: 'Android',
     architecture:
         'Flutter mobile application focused on competitive-exam learning '
         'workflows, responsive UI, and client-side application behavior.',
@@ -295,7 +295,7 @@ abstract final class PortfolioProjects {
     featureGraphic:
         'assets/feature_graphics_optimized/pg_easy_feature_graphic.jpg',
     logoAssets: ['assets/project_logos_optimized/pg_easy_logo.png'],
-    platformLabel: 'Android',
+    platformLabel: 'Android & iOS',
     architecture:
         'Layered Flutter application flow separating Presentation, '
         'Data/Services/Models, and Network responsibilities.',
@@ -386,13 +386,13 @@ abstract final class PortfolioProjects {
   );
 
   static const List<PortfolioProject> all = [
-    genesisEdu,
-    edudent,
-    genesisBcsCare,
-    genesisMentor,
     cashFile,
+    genesisEdu,
+    genesisMentor,
     theMessageAcademy,
     pgEasy,
     dgHrm,
+    edudent,
+    genesisBcsCare,
   ];
 }

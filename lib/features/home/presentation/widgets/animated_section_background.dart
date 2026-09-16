@@ -29,7 +29,7 @@ class _AnimatedSectionBackgroundState extends State<AnimatedSectionBackground>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 14),
+      duration: const Duration(seconds: 18),
     );
   }
 
@@ -93,44 +93,37 @@ class _AnimatedSectionPainter extends CustomPainter {
 
     final phase = animation.value * math.pi * 2;
 
+    _paintStaticGlows(canvas, size);
+    _paintOrbitNodes(canvas, size, phase);
+    _paintFloatingBubbles(canvas, size, phase);
+  }
+
+  void _paintStaticGlows(Canvas canvas, Size size) {
     _paintGlow(
       canvas: canvas,
-      center: Offset(
-        size.width * 0.78 + math.sin(phase * 0.72) * (compact ? 70 : 120),
-        size.height * 0.20 + math.cos(phase * 0.58) * (compact ? 52 : 82),
-      ),
-      radius: compact ? 200 : 310,
+      center: Offset(size.width * 0.80, size.height * 0.20),
+      radius: compact ? 190 : 300,
       color: AppColors.secondary,
-      alpha: 0.24 * intensity,
+      alpha: 0.19 * intensity,
     );
 
     _paintGlow(
       canvas: canvas,
-      center: Offset(
-        size.width * 0.14 + math.cos(phase * 0.53) * (compact ? 65 : 105),
-        size.height * 0.79 + math.sin(phase * 0.64) * (compact ? 54 : 78),
-      ),
-      radius: compact ? 190 : 285,
+      center: Offset(size.width * 0.12, size.height * 0.80),
+      radius: compact ? 180 : 275,
       color: AppColors.primary,
-      alpha: 0.20 * intensity,
+      alpha: 0.16 * intensity,
     );
 
     if (!compact) {
       _paintGlow(
         canvas: canvas,
-        center: Offset(
-          size.width * 0.48 + math.sin(phase * 0.39) * 72,
-          size.height * 0.47 + math.cos(phase * 0.44) * 52,
-        ),
-        radius: 215,
+        center: Offset(size.width * 0.50, size.height * 0.48),
+        radius: 220,
         color: AppColors.accent,
-        alpha: 0.10 * intensity,
+        alpha: 0.065 * intensity,
       );
     }
-
-    _paintParticles(canvas, size, phase);
-
-    _paintAccentLines(canvas, size, phase);
   }
 
   void _paintGlow({
@@ -144,19 +137,99 @@ class _AnimatedSectionPainter extends CustomPainter {
       ..shader = RadialGradient(
         colors: [
           color.withValues(alpha: alpha),
-          color.withValues(alpha: alpha * 0.46),
+          color.withValues(alpha: alpha * 0.42),
           color.withValues(alpha: 0),
         ],
-        stops: const [0, 0.46, 1],
+        stops: const [0, 0.48, 1],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
 
     canvas.drawCircle(center, radius, paint);
   }
 
-  void _paintParticles(Canvas canvas, Size size, double phase) {
-    final count = compact ? 5 : 7;
+  void _paintOrbitNodes(Canvas canvas, Size size, double phase) {
+    final orbitPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.9
+      ..isAntiAlias = true;
 
-    final particlePaint = Paint()
+    final nodePaint = Paint()
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    final haloPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..isAntiAlias = true;
+
+    void drawOrbit({
+      required Offset center,
+      required double radiusX,
+      required double radiusY,
+      required Color color,
+      required double speed,
+      required double offset,
+    }) {
+      orbitPaint.color = color.withValues(alpha: 0.075 * intensity);
+
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: center,
+          width: radiusX * 2,
+          height: radiusY * 2,
+        ),
+        orbitPaint,
+      );
+
+      final angle = (phase * speed) + offset;
+
+      final point = Offset(
+        center.dx + math.cos(angle) * radiusX,
+        center.dy + math.sin(angle) * radiusY,
+      );
+
+      nodePaint.color = color.withValues(alpha: 0.48 * intensity);
+
+      haloPaint.color = color.withValues(alpha: 0.14 * intensity);
+
+      canvas.drawCircle(point, compact ? 2.5 : 3.1, nodePaint);
+
+      canvas.drawCircle(point, compact ? 7 : 8, haloPaint);
+    }
+
+    drawOrbit(
+      center: Offset(size.width * 0.23, size.height * 0.27),
+      radiusX: compact ? 46 : 72,
+      radiusY: compact ? 29 : 43,
+      color: AppColors.primary,
+      speed: 0.82,
+      offset: 0,
+    );
+
+    drawOrbit(
+      center: Offset(size.width * 0.78, size.height * 0.70),
+      radiusX: compact ? 58 : 92,
+      radiusY: compact ? 35 : 55,
+      color: AppColors.secondary,
+      speed: -0.64,
+      offset: math.pi * 0.55,
+    );
+
+    if (!compact) {
+      drawOrbit(
+        center: Offset(size.width * 0.55, size.height * 0.35),
+        radiusX: 110,
+        radiusY: 61,
+        color: AppColors.accent,
+        speed: 0.46,
+        offset: math.pi,
+      );
+    }
+  }
+
+  void _paintFloatingBubbles(Canvas canvas, Size size, double phase) {
+    final count = compact ? 5 : 8;
+
+    final bubblePaint = Paint()
       ..style = PaintingStyle.fill
       ..isAntiAlias = true;
 
@@ -168,61 +241,31 @@ class _AnimatedSectionPainter extends CustomPainter {
     for (var index = 0; index < count; index++) {
       final fraction = (index + 1) / (count + 1);
 
-      final x =
-          size.width * fraction +
-          math.sin(phase + index * 0.85) * (compact ? 34 : 48);
+      final angle = phase + (index * 0.82);
+
+      final x = size.width * fraction + math.sin(angle) * (compact ? 26 : 38);
 
       final y =
-          size.height * (0.17 + ((index % 4) * 0.21)) +
-          math.cos((phase * 0.74) + index) * (compact ? 28 : 38);
+          size.height * (0.16 + ((index % 4) * 0.22)) +
+          math.cos((phase * 0.72) + index) * (compact ? 22 : 31);
 
       final color = index.isEven ? AppColors.primary : AppColors.secondary;
 
-      final pulse = 0.82 + math.sin(phase * 1.2 + index) * 0.18;
+      final pulse = 0.84 + math.sin((phase * 1.05) + index) * 0.16;
 
-      particlePaint.color = color.withValues(alpha: 0.34 * intensity * pulse);
+      bubblePaint.color = color.withValues(alpha: 0.29 * intensity * pulse);
 
-      haloPaint.color = color.withValues(alpha: 0.13 * intensity * pulse);
+      haloPaint.color = color.withValues(alpha: 0.09 * intensity * pulse);
 
       final center = Offset(x, y);
+      final radius = index % 3 == 0 ? 3.4 : 2.5;
 
-      final radius = index % 3 == 0 ? 3.8 : 2.7;
-
-      canvas.drawCircle(center, radius, particlePaint);
+      canvas.drawCircle(center, radius, bubblePaint);
 
       if (index.isEven) {
-        canvas.drawCircle(center, radius + 6, haloPaint);
+        canvas.drawCircle(center, radius + 5.5, haloPaint);
       }
     }
-  }
-
-  void _paintAccentLines(Canvas canvas, Size size, double phase) {
-    if (compact) {
-      return;
-    }
-
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
-      ..isAntiAlias = true;
-
-    final shift = math.sin(phase * 0.48) * 70;
-
-    paint.color = AppColors.primary.withValues(alpha: 0.15 * intensity);
-
-    canvas.drawLine(
-      Offset(size.width * 0.05 + shift, size.height * 0.20),
-      Offset(size.width * 0.23 + shift, size.height * 0.07),
-      paint,
-    );
-
-    paint.color = AppColors.secondary.withValues(alpha: 0.16 * intensity);
-
-    canvas.drawLine(
-      Offset(size.width * 0.70 - shift, size.height * 0.88),
-      Offset(size.width * 0.94 - shift, size.height * 0.68),
-      paint,
-    );
   }
 
   @override

@@ -18,6 +18,10 @@ class ProjectsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(
         _isCompact ? AppRadius.lg : AppRadius.xl,
@@ -27,17 +31,29 @@ class ProjectsSection extends StatelessWidget {
           borderRadius: BorderRadius.circular(
             _isCompact ? AppRadius.lg : AppRadius.xl,
           ),
-          border: Border.all(color: AppColors.borderStrong),
-          gradient: const LinearGradient(
+          border: Border.all(
+            color: colors.outline.withValues(alpha: isDark ? 0.90 : 0.74),
+          ),
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0C1628), Color(0xFF080F1D), Color(0xFF040914)],
+            colors: isDark
+                ? const [
+                    Color(0xFF0C1628),
+                    Color(0xFF080F1D),
+                    Color(0xFF050A14),
+                  ]
+                : const [
+                    Color(0xFFFFFFFF),
+                    Color(0xFFF8FAFF),
+                    Color(0xFFF0F4FA),
+                  ],
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.black.withValues(alpha: 0.24),
+              color: AppColors.black.withValues(alpha: isDark ? 0.24 : 0.07),
               blurRadius: 36,
-              offset: const Offset(0, 18),
+              offset: const Offset(0, 16),
             ),
           ],
         ),
@@ -46,12 +62,12 @@ class ProjectsSection extends StatelessWidget {
             Positioned.fill(
               child: AnimatedSectionBackground(
                 compact: _isCompact,
-                intensity: 1.35,
+                intensity: isDark ? 1.10 : 0.44,
               ),
             ),
             Positioned(
               top: 0,
-              right: _isCompact ? 22 : 38,
+              right: _isCompact ? 20 : 36,
               child: const _SectionIndex(),
             ),
             Padding(
@@ -65,100 +81,169 @@ class ProjectsSection extends StatelessWidget {
                 children: [
                   const _SectionLabel(
                     icon: Icons.grid_view_rounded,
-                    label: 'PROJECTS',
+                    label: 'PROJECTS / PRODUCTS',
                   ),
-                  SizedBox(height: _isCompact ? AppSpacing.sm : AppSpacing.md),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!_isCompact) ...[
-                        Container(
-                          width: 3,
-                          height: 82,
-                          decoration: BoxDecoration(
-                            gradient: AppColors.futuristicGradient,
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                      ],
-                      Expanded(
-                        child: Text(
-                          'Selected Flutter products I have worked on.',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: switch (windowSize) {
-                              AppWindowSize.compact => 28,
-                              AppWindowSize.medium => 35,
-                              AppWindowSize.expanded => 42,
-                            },
-                            height: 1.12,
-                            letterSpacing: -0.9,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    ],
+                  SizedBox(height: _isCompact ? AppSpacing.md : AppSpacing.lg),
+                  Text(
+                    'Flutter products built for real users and real workflows.',
+                    style: TextStyle(
+                      color: colors.onSurface,
+                      fontSize: switch (windowSize) {
+                        AppWindowSize.compact => 28,
+                        AppWindowSize.medium => 35,
+                        AppWindowSize.expanded => 42,
+                      },
+                      height: 1.11,
+                      letterSpacing: -0.9,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                   SizedBox(height: _isCompact ? AppSpacing.md : AppSpacing.lg),
                   ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 850),
+                    constraints: const BoxConstraints(maxWidth: 860),
                     child: Text(
-                      'These projects represent real Flutter application '
-                      'work across education, finance, Islamic learning, '
-                      'medical learning, and human resource management.',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.textSecondary,
+                      'These projects represent production Flutter work across '
+                      'education, finance, Islamic learning, medical learning, '
+                      'and human resource management.',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: colors.onSurface.withValues(alpha: 0.66),
                         fontSize: _isCompact ? 14 : 16,
-                        height: 1.68,
+                        height: 1.66,
                       ),
                     ),
                   ),
+                  SizedBox(height: _isCompact ? AppSpacing.lg : AppSpacing.xl),
+                  _ProjectOverview(compact: _isCompact),
                   SizedBox(height: _isCompact ? AppSpacing.lg : AppSpacing.xxl),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final columnCount = switch (windowSize) {
-                        AppWindowSize.expanded => 3,
-                        AppWindowSize.medium => 2,
-                        AppWindowSize.compact => 1,
-                      };
+                  _ProjectsLayout(windowSize: windowSize),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-                      final spacing = switch (windowSize) {
-                        AppWindowSize.compact => AppSpacing.md,
-                        AppWindowSize.medium => AppSpacing.lg,
-                        AppWindowSize.expanded => AppSpacing.lg,
-                      };
+class _ProjectOverview extends StatelessWidget {
+  const _ProjectOverview({required this.compact});
 
-                      final cardWidth =
-                          (constraints.maxWidth -
-                              (spacing * (columnCount - 1))) /
-                          columnCount;
+  final bool compact;
 
-                      return Wrap(
-                        spacing: spacing,
-                        runSpacing: spacing,
-                        children: [
-                          for (
-                            var index = 0;
-                            index < PortfolioProjects.all.length;
-                            index++
-                          )
-                            SizedBox(
-                              width: cardWidth,
-                              child: _ProjectCard(
-                                index: index,
-                                project: PortfolioProjects.all[index],
-                                compact: _isCompact,
-                                onPressed: () {
-                                  context.push<void>(
-                                    PortfolioProjects.all[index].routePath,
-                                  );
-                                },
-                              ),
-                            ),
-                        ],
-                      );
-                    },
+  @override
+  Widget build(BuildContext context) {
+    const items = [
+      _OverviewData(
+        icon: Icons.apps_rounded,
+        value: '08',
+        label: 'Flutter products',
+      ),
+      _OverviewData(
+        icon: Icons.devices_outlined,
+        value: 'Android + iOS',
+        label: 'Production platforms',
+      ),
+      _OverviewData(
+        icon: Icons.account_tree_outlined,
+        value: 'App Layer',
+        label: 'Flutter ownership',
+      ),
+      _OverviewData(
+        icon: Icons.rocket_launch_outlined,
+        value: 'Production',
+        label: 'Release experience',
+      ),
+    ];
+
+    if (compact) {
+      return Wrap(
+        spacing: AppSpacing.xs,
+        runSpacing: AppSpacing.xs,
+        children: [
+          for (final item in items)
+            SizedBox(
+              width: double.infinity,
+              child: _OverviewCard(data: item),
+            ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        for (var index = 0; index < items.length; index++) ...[
+          Expanded(child: _OverviewCard(data: items[index])),
+          if (index != items.length - 1) const SizedBox(width: AppSpacing.xs),
+        ],
+      ],
+    );
+  }
+}
+
+class _OverviewData {
+  const _OverviewData({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String value;
+  final String label;
+}
+
+class _OverviewCard extends StatelessWidget {
+  const _OverviewCard({required this.data});
+
+  final _OverviewData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.surface.withValues(alpha: 0.56),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: colors.outline.withValues(alpha: 0.64)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Row(
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: SizedBox(
+                width: 38,
+                height: 38,
+                child: Icon(data.icon, size: 18, color: AppColors.primary),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data.value,
+                    style: TextStyle(
+                      color: colors.onSurface,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    data.label,
+                    style: TextStyle(
+                      color: colors.onSurface.withValues(alpha: 0.46),
+                      fontSize: 10.5,
+                      height: 1.3,
+                    ),
                   ),
                 ],
               ),
@@ -170,17 +255,107 @@ class ProjectsSection extends StatelessWidget {
   }
 }
 
+class _ProjectsLayout extends StatelessWidget {
+  const _ProjectsLayout({required this.windowSize});
+
+  final AppWindowSize windowSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final projects = PortfolioProjects.all;
+
+        final spacing = switch (windowSize) {
+          AppWindowSize.compact => AppSpacing.md,
+          AppWindowSize.medium => AppSpacing.lg,
+          AppWindowSize.expanded => AppSpacing.lg,
+        };
+
+        if (windowSize == AppWindowSize.compact) {
+          return Column(
+            children: [
+              for (var index = 0; index < projects.length; index++) ...[
+                _ProjectCard(
+                  index: index,
+                  project: projects[index],
+                  compact: true,
+                  featured: index < 2,
+                  onPressed: () {
+                    context.push<void>(projects[index].routePath);
+                  },
+                ),
+                if (index != projects.length - 1) SizedBox(height: spacing),
+              ],
+            ],
+          );
+        }
+
+        if (windowSize == AppWindowSize.medium) {
+          final cardWidth = (constraints.maxWidth - spacing) / 2;
+
+          return Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: [
+              for (var index = 0; index < projects.length; index++)
+                SizedBox(
+                  width: cardWidth,
+                  child: _ProjectCard(
+                    index: index,
+                    project: projects[index],
+                    compact: false,
+                    featured: index < 2,
+                    onPressed: () {
+                      context.push<void>(projects[index].routePath);
+                    },
+                  ),
+                ),
+            ],
+          );
+        }
+
+        final featuredWidth = (constraints.maxWidth - spacing) / 2;
+
+        final standardWidth = (constraints.maxWidth - (spacing * 2)) / 3;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (var index = 0; index < projects.length; index++)
+              SizedBox(
+                width: index < 2 ? featuredWidth : standardWidth,
+                child: _ProjectCard(
+                  index: index,
+                  project: projects[index],
+                  compact: false,
+                  featured: index < 2,
+                  onPressed: () {
+                    context.push<void>(projects[index].routePath);
+                  },
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _ProjectCard extends StatefulWidget {
   const _ProjectCard({
     required this.index,
     required this.project,
     required this.compact,
+    required this.featured,
     required this.onPressed,
   });
 
   final int index;
   final PortfolioProject project;
   final bool compact;
+  final bool featured;
   final VoidCallback onPressed;
 
   @override
@@ -195,9 +370,17 @@ class _ProjectCardState extends State<_ProjectCard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     final radius = widget.compact ? AppRadius.lg : AppRadius.xl;
 
-    final visibleTechnologyCount = widget.compact ? 4 : 5;
+    final visibleTechnologyCount = widget.featured
+        ? 6
+        : widget.compact
+        ? 4
+        : 5;
 
     final visibleTechnologies = widget.project.technologies
         .take(visibleTechnologyCount)
@@ -215,28 +398,29 @@ class _ProjectCardState extends State<_ProjectCard> {
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
           color: _active
-              ? AppColors.surfaceElevated
-              : AppColors.surface.withValues(alpha: 0.72),
+              ? colors.surface
+              : colors.surface.withValues(alpha: isDark ? 0.70 : 0.88),
           borderRadius: BorderRadius.circular(radius),
           border: Border.all(
-            color: _active ? AppColors.borderAccent : AppColors.border,
+            color: _active
+                ? AppColors.primary.withValues(alpha: 0.44)
+                : colors.outline.withValues(alpha: 0.70),
           ),
           boxShadow: _active
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.11),
+                    color: AppColors.primary.withValues(
+                      alpha: isDark ? 0.11 : 0.08,
+                    ),
                     blurRadius: 30,
                     offset: const Offset(0, 14),
-                  ),
-                  BoxShadow(
-                    color: AppColors.secondary.withValues(alpha: 0.07),
-                    blurRadius: 38,
-                    offset: const Offset(0, 18),
                   ),
                 ]
               : [
                   BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.16),
+                    color: AppColors.black.withValues(
+                      alpha: isDark ? 0.16 : 0.045,
+                    ),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -261,8 +445,8 @@ class _ProjectCardState extends State<_ProjectCard> {
               mouseCursor: SystemMouseCursors.click,
               hoverColor: AppColors.transparent,
               focusColor: AppColors.transparent,
-              splashColor: AppColors.primary.withValues(alpha: 0.08),
               highlightColor: AppColors.transparent,
+              splashColor: AppColors.primary.withValues(alpha: 0.07),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -270,6 +454,7 @@ class _ProjectCardState extends State<_ProjectCard> {
                     active: _active,
                     index: widget.index,
                     project: widget.project,
+                    featured: widget.featured,
                   ),
                   Padding(
                     padding: EdgeInsets.all(
@@ -278,15 +463,32 @@ class _ProjectCardState extends State<_ProjectCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          widget.project.title,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: widget.compact ? 20 : 22,
-                            height: 1.15,
-                            letterSpacing: -0.25,
-                            fontWeight: FontWeight.w900,
-                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.project.title,
+                                style: TextStyle(
+                                  color: colors.onSurface,
+                                  fontSize: widget.featured
+                                      ? widget.compact
+                                            ? 21
+                                            : 24
+                                      : widget.compact
+                                      ? 20
+                                      : 21,
+                                  height: 1.15,
+                                  letterSpacing: -0.3,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                            if (widget.featured) ...[
+                              const SizedBox(width: AppSpacing.sm),
+                              const _FeaturedBadge(),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
@@ -306,15 +508,12 @@ class _ProjectCardState extends State<_ProjectCard> {
                         Text(
                           widget.project.summary,
                           style: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: colors.onSurface.withValues(alpha: 0.60),
                             fontSize: widget.compact ? 13 : 14,
                             height: 1.56,
                           ),
                         ),
-                        if (widget.project.note != null) ...[
-                          const SizedBox(height: AppSpacing.sm),
-                          _ProjectNote(text: widget.project.note!),
-                        ],
+
                         SizedBox(
                           height: widget.compact
                               ? AppSpacing.md
@@ -361,16 +560,18 @@ class _ProjectPreview extends StatelessWidget {
     required this.active,
     required this.index,
     required this.project,
+    required this.featured,
   });
 
   final bool active;
   final int index;
   final PortfolioProject project;
+  final bool featured;
 
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 16 / 9,
+      aspectRatio: featured ? 16 / 8.4 : 16 / 9,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -395,10 +596,10 @@ class _ProjectPreview extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [
                   AppColors.transparent,
-                  AppColors.background.withValues(alpha: 0.06),
-                  AppColors.background.withValues(alpha: 0.80),
+                  AppColors.background.withValues(alpha: 0.04),
+                  AppColors.background.withValues(alpha: 0.82),
                 ],
-                stops: const [0, 0.52, 1],
+                stops: const [0, 0.50, 1],
               ),
             ),
           ),
@@ -421,32 +622,76 @@ class _ProjectPreview extends StatelessWidget {
             right: AppSpacing.sm,
             bottom: AppSpacing.sm,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Flexible(child: _PlatformBadge(label: project.platformLabel)),
+                const Spacer(),
+                if (featured) const _PreviewSignal(),
               ],
             ),
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              height: active ? 3 : 2,
-              decoration: BoxDecoration(
-                gradient: AppColors.futuristicGradient,
-                boxShadow: active
-                    ? [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.30),
-                          blurRadius: 12,
-                        ),
-                      ]
-                    : null,
+        ],
+      ),
+    );
+  }
+}
+
+class _PreviewSignal extends StatelessWidget {
+  const _PreviewSignal();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.background.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.28)),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.bolt_rounded, size: 13, color: AppColors.primary),
+            SizedBox(width: 4),
+            Text(
+              'PRODUCT',
+              style: TextStyle(
+                color: AppColors.white,
+                fontSize: 9,
+                letterSpacing: 1,
+                fontWeight: FontWeight.w800,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FeaturedBadge extends StatelessWidget {
+  const _FeaturedBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.22)),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        child: Text(
+          'FEATURED',
+          style: TextStyle(
+            color: AppColors.primary,
+            fontSize: 8.5,
+            letterSpacing: 0.9,
+            fontWeight: FontWeight.w900,
           ),
-        ],
+        ),
       ),
     );
   }
@@ -465,9 +710,8 @@ class _ProjectLogo extends StatelessWidget {
       height: 48,
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.94),
+        color: AppColors.white.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.white.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
             color: AppColors.black.withValues(alpha: 0.24),
@@ -496,16 +740,16 @@ class _ProjectNumber extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.background.withValues(alpha: 0.78),
+        color: AppColors.background.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: AppColors.borderStrong),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.14)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
         child: Text(
           value,
           style: const TextStyle(
-            color: AppColors.textSecondary,
+            color: AppColors.white,
             fontSize: 9.5,
             letterSpacing: 1.2,
             fontWeight: FontWeight.w900,
@@ -525,9 +769,9 @@ class _PlatformBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.background.withValues(alpha: 0.82),
+        color: AppColors.background.withValues(alpha: 0.84),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: AppColors.borderStrong),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.14)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -548,64 +792,9 @@ class _PlatformBadge extends StatelessWidget {
                 label,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: AppColors.textPrimary,
+                  color: AppColors.white,
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProjectNote extends StatelessWidget {
-  const _ProjectNote({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.secondary.withValues(alpha: 0.10),
-            AppColors.primary.withValues(alpha: 0.04),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.18)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 1),
-              child: Icon(
-                Icons.info_outline_rounded,
-                size: 14,
-                color: AppColors.accent,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(
-              child: Text(
-                text,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 11.5,
-                  height: 1.4,
-                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -623,6 +812,8 @@ class _ProjectAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
@@ -631,16 +822,18 @@ class _ProjectAction extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: active ? null : AppColors.background.withValues(alpha: 0.58),
+        color: active ? null : colors.surface.withValues(alpha: 0.62),
         gradient: active ? AppColors.brandGradient : null,
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
-          color: active ? AppColors.transparent : AppColors.borderStrong,
+          color: active
+              ? AppColors.transparent
+              : colors.outline.withValues(alpha: 0.70),
         ),
         boxShadow: active
             ? [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.18),
+                  color: AppColors.primary.withValues(alpha: 0.16),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
@@ -651,9 +844,9 @@ class _ProjectAction extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              'View Project',
+              'Open project',
               style: TextStyle(
-                color: active ? AppColors.white : AppColors.textPrimary,
+                color: active ? AppColors.white : colors.onSurface,
                 fontSize: 12.5,
                 fontWeight: FontWeight.w800,
               ),
@@ -688,16 +881,18 @@ class _TechnologyChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: emphasized
             ? AppColors.primary.withValues(alpha: 0.10)
-            : AppColors.background.withValues(alpha: 0.72),
+            : colors.surface.withValues(alpha: 0.60),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(
           color: emphasized
               ? AppColors.primary.withValues(alpha: 0.22)
-              : AppColors.border,
+              : colors.outline.withValues(alpha: 0.62),
         ),
       ),
       child: Padding(
@@ -708,7 +903,9 @@ class _TechnologyChip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: emphasized ? AppColors.primary : AppColors.textSecondary,
+            color: emphasized
+                ? AppColors.primary
+                : colors.onSurface.withValues(alpha: 0.62),
             fontSize: compact ? 10.5 : 11.5,
             fontWeight: FontWeight.w600,
           ),
@@ -768,12 +965,14 @@ class _SectionIndex extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(top: AppSpacing.md),
+    final colors = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.md),
       child: Text(
         '04 / PROJECTS',
         style: TextStyle(
-          color: AppColors.textSubtle,
+          color: colors.onSurface.withValues(alpha: 0.30),
           fontSize: 9.5,
           letterSpacing: 1.6,
           fontWeight: FontWeight.w800,

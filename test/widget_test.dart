@@ -39,8 +39,7 @@ void main() {
       find.descendant(
         of: hero,
         matching: find.text(
-          'I turn product ideas into polished, '
-          'production-ready Flutter experiences.',
+          'I engineer mobile products that move from idea to production.',
         ),
       ),
       findsOneWidget,
