@@ -32,11 +32,12 @@ class CredibilityStrip extends StatelessWidget {
           spacing: spacing,
           runSpacing: spacing,
           children: [
-            for (final item in _items)
+            for (var index = 0; index < _items.length; index++)
               SizedBox(
                 width: itemWidth,
                 child: _CredibilityCard(
-                  item: item,
+                  index: index,
+                  item: _items[index],
                   compact: windowSize == AppWindowSize.compact,
                 ),
               ),
@@ -47,73 +48,187 @@ class CredibilityStrip extends StatelessWidget {
   }
 }
 
-class _CredibilityCard extends StatelessWidget {
-  const _CredibilityCard({required this.item, required this.compact});
+class _CredibilityCard extends StatefulWidget {
+  const _CredibilityCard({
+    required this.index,
+    required this.item,
+    required this.compact,
+  });
 
+  final int index;
   final _CredibilityItem item;
   final bool compact;
 
   @override
+  State<_CredibilityCard> createState() => _CredibilityCardState();
+}
+
+class _CredibilityCardState extends State<_CredibilityCard> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(
-          compact ? AppRadius.md : AppRadius.lg,
-        ),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(compact ? AppSpacing.md : AppSpacing.lg),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.18),
-                ),
-              ),
-              child: SizedBox(
-                width: compact ? 36 : 42,
-                height: compact ? 36 : 42,
-                child: Icon(
-                  item.icon,
-                  size: compact ? 18 : 21,
-                  color: AppColors.primary,
-                ),
-              ),
+    return MouseRegion(
+      cursor: SystemMouseCursors.basic,
+      onEnter: (_) {
+        setState(() {
+          _hovered = true;
+        });
+      },
+      onExit: (_) {
+        setState(() {
+          _hovered = false;
+        });
+      },
+      child: AnimatedScale(
+        scale: _hovered ? 1.015 : 1,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                _hovered
+                    ? AppColors.surfaceElevated
+                    : AppColors.surface.withValues(alpha: 0.92),
+                AppColors.backgroundSoft,
+              ],
             ),
-            SizedBox(width: compact ? AppSpacing.xs : AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.value,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: compact ? 15 : 18,
-                      height: 1.15,
-                      fontWeight: FontWeight.w800,
+            borderRadius: BorderRadius.circular(
+              widget.compact ? AppRadius.md : AppRadius.lg,
+            ),
+            border: Border.all(
+              color: _hovered ? AppColors.borderAccent : AppColors.border,
+            ),
+            boxShadow: _hovered
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.10),
+                      blurRadius: 26,
+                      offset: const Offset(0, 12),
+                    ),
+                    BoxShadow(
+                      color: AppColors.secondary.withValues(alpha: 0.08),
+                      blurRadius: 36,
+                      offset: const Offset(0, 16),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: AppColors.black.withValues(alpha: 0.16),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                top: 0,
+                left: widget.compact ? 14 : 18,
+                right: widget.compact ? 14 : 18,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 2,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withValues(
+                          alpha: _hovered ? 0.95 : 0.42,
+                        ),
+                        AppColors.secondary.withValues(
+                          alpha: _hovered ? 0.95 : 0.42,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    item.label,
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: compact ? 11.5 : 13,
-                      height: 1.35,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+              Padding(
+                padding: EdgeInsets.all(
+                  widget.compact ? AppSpacing.md : AppSpacing.lg,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: AppColors.brandGradient,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.18),
+                            blurRadius: 16,
+                          ),
+                        ],
+                      ),
+                      child: SizedBox(
+                        width: widget.compact ? 38 : 44,
+                        height: widget.compact ? 38 : 44,
+                        child: Icon(
+                          widget.item.icon,
+                          size: widget.compact ? 18 : 21,
+                          color: AppColors.white,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: widget.compact ? AppSpacing.xs : AppSpacing.sm,
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  widget.item.value,
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: widget.compact ? 15 : 18,
+                                    height: 1.15,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '0${widget.index + 1}',
+                                style: TextStyle(
+                                  color: AppColors.textSubtle.withValues(
+                                    alpha: 0.80,
+                                  ),
+                                  fontSize: widget.compact ? 9 : 10,
+                                  letterSpacing: 1.1,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.xxs),
+                          Text(
+                            widget.item.label,
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: widget.compact ? 11.5 : 12.5,
+                              height: 1.4,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

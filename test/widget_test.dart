@@ -1,6 +1,5 @@
 import 'package:asif_portfolio/app/app.dart';
 import 'package:asif_portfolio/features/home/presentation/widgets/hero_section.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -14,36 +13,41 @@ void main() {
     expect(hero, findsOneWidget);
 
     expect(
-      find.descendant(of: hero, matching: find.text('MD. ASIF AHMED')),
+      find.descendant(of: hero, matching: find.text('MD. ASIF')),
+      findsOneWidget,
+    );
+
+    expect(
+      find.descendant(of: hero, matching: find.text('AHMED')),
       findsOneWidget,
     );
 
     expect(
       find.descendant(
         of: hero,
-        matching: find.byWidgetPredicate(
-          (widget) =>
-              widget is Text &&
-              widget.textSpan?.toPlainText() ==
-                  'Mobile Application Developer  •  Flutter Developer',
-        ),
+        matching: find.text('Mobile Application Developer'),
       ),
       findsOneWidget,
+    );
+
+    expect(
+      find.descendant(of: hero, matching: find.text('Flutter Developer')),
+      findsAtLeastNWidgets(1),
     );
 
     expect(
       find.descendant(
         of: hero,
         matching: find.text(
-          'Building production-ready Flutter applications '
-          'for Android and iOS.',
+          'I turn product ideas into polished, '
+          'production-ready Flutter experiences.',
         ),
       ),
       findsOneWidget,
     );
 
     expect(
-      find.descendant(of: hero, matching: find.text('View Projects')),
+      find.descendant(of: hero, matching: find.text('Explore Projects')),
       findsOneWidget,
     );
 
