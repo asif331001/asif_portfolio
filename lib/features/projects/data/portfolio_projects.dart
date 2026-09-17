@@ -48,9 +48,9 @@ abstract final class PortfolioProjects {
     ],
     screenshots: [
       'assets/app_screenshots/genesis_edu_1.jpeg',
-      'assets/app_screenshots/Genesis_edu_2.jpeg',
-      'assets/app_screenshots/Genesis_edu_3.jpeg',
-      'assets/app_screenshots/Genesis_edu_4.jpeg',
+      'assets/app_screenshots/genesis_edu_2.jpeg',
+      'assets/app_screenshots/genesis_edu_3.jpeg',
+      'assets/app_screenshots/genesis_edu_4.jpeg',
     ],
     note: 'Genesis Edu belongs to the wider Genesis learning product family.',
   );
