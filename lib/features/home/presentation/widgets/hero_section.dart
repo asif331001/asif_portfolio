@@ -34,6 +34,9 @@ class HeroSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final tier = AppBreakpoints.tierForWidth(viewportWidth);
+    final ultraNarrow = tier == AppViewportTier.ultraNarrow;
 
     final radius = _isCompact ? AppRadius.lg : AppRadius.xl;
 
@@ -61,7 +64,11 @@ class HeroSection extends StatelessWidget {
               top: -150,
               right: -110,
               child: _StaticGlow(
-                size: _isCompact ? 300 : 430,
+                size: ultraNarrow
+                    ? 240
+                    : _isCompact
+                    ? 300
+                    : 430,
                 color: AppColors.primary,
                 opacity: isDark ? 0.13 : 0.10,
               ),
@@ -70,22 +77,32 @@ class HeroSection extends StatelessWidget {
               bottom: -170,
               left: -120,
               child: _StaticGlow(
-                size: _isCompact ? 320 : 450,
+                size: ultraNarrow
+                    ? 260
+                    : _isCompact
+                    ? 320
+                    : 450,
                 color: AppColors.secondary,
                 opacity: isDark ? 0.11 : 0.08,
               ),
             ),
             Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: switch (windowSize) {
-                  AppWindowSize.compact => AppSpacing.md,
-                  AppWindowSize.medium => AppSpacing.xl,
-                  AppWindowSize.expanded => AppSpacing.xxxl,
+                horizontal: switch (tier) {
+                  AppViewportTier.ultraNarrow => 10,
+                  AppViewportTier.narrow => 12,
+                  AppViewportTier.compact => 16,
+                  AppViewportTier.medium => 32,
+                  AppViewportTier.expanded => 48,
+                  AppViewportTier.ultraWide => 56,
                 },
-                vertical: switch (windowSize) {
-                  AppWindowSize.compact => AppSpacing.lg,
-                  AppWindowSize.medium => 52,
-                  AppWindowSize.expanded => 72,
+                vertical: switch (tier) {
+                  AppViewportTier.ultraNarrow => 16,
+                  AppViewportTier.narrow => 18,
+                  AppViewportTier.compact => 24,
+                  AppViewportTier.medium => 52,
+                  AppViewportTier.expanded => 72,
+                  AppViewportTier.ultraWide => 76,
                 },
               ),
               child: _isExpanded
@@ -119,12 +136,23 @@ class HeroSection extends StatelessWidget {
                           onWhatsAppPressed: onWhatsAppPressed,
                         ),
                         SizedBox(
-                          height: _isCompact ? AppSpacing.xl : AppSpacing.xxxl,
+                          height: ultraNarrow
+                              ? AppSpacing.lg
+                              : _isCompact
+                              ? AppSpacing.xl
+                              : AppSpacing.xxxl,
                         ),
                         Center(
                           child: ConstrainedBox(
                             constraints: BoxConstraints(
-                              maxWidth: _isCompact ? 330 : 470,
+                              maxWidth: switch (tier) {
+                                AppViewportTier.ultraNarrow => 230,
+                                AppViewportTier.narrow => 260,
+                                AppViewportTier.compact => 330,
+                                AppViewportTier.medium => 470,
+                                AppViewportTier.expanded => 470,
+                                AppViewportTier.ultraWide => 470,
+                              },
                             ),
                             child: const _TechPortraitSystem(),
                           ),
@@ -162,11 +190,74 @@ class _HeroContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final tier = AppBreakpoints.tierForWidth(viewportWidth);
+    final ultraNarrow = tier == AppViewportTier.ultraNarrow;
 
-    final nameSize = switch (windowSize) {
-      AppWindowSize.compact => 40.0,
-      AppWindowSize.medium => 58.0,
-      AppWindowSize.expanded => 70.0,
+    double fluid({
+      required double minWidth,
+      required double maxWidth,
+      required double minSize,
+      required double maxSize,
+    }) {
+      final progress = ((viewportWidth - minWidth) / (maxWidth - minWidth))
+          .clamp(0.0, 1.0)
+          .toDouble();
+
+      return minSize + ((maxSize - minSize) * progress);
+    }
+
+    final nameSize = switch (tier) {
+      AppViewportTier.ultraNarrow => fluid(
+        minWidth: 280,
+        maxWidth: 320,
+        minSize: 32,
+        maxSize: 36,
+      ),
+      AppViewportTier.narrow => fluid(
+        minWidth: 321,
+        maxWidth: 375,
+        minSize: 36,
+        maxSize: 40,
+      ),
+      AppViewportTier.compact => fluid(
+        minWidth: 375,
+        maxWidth: 700,
+        minSize: 40,
+        maxSize: 48,
+      ),
+      AppViewportTier.medium => fluid(
+        minWidth: 700,
+        maxWidth: 1100,
+        minSize: 52,
+        maxSize: 58,
+      ),
+      AppViewportTier.expanded => 70.0,
+      AppViewportTier.ultraWide => 70.0,
+    };
+
+    final roleSize = ultraNarrow
+        ? 13.0
+        : _isCompact
+        ? 15.0
+        : 19.0;
+
+    final statementSize = switch (tier) {
+      AppViewportTier.ultraNarrow => 19.5,
+      AppViewportTier.narrow => 21.5,
+      AppViewportTier.compact => 23.0,
+      AppViewportTier.medium => 30.0,
+      AppViewportTier.expanded => 32.0,
+      AppViewportTier.ultraWide => 32.0,
+    };
+
+    final bodySize = switch (tier) {
+      AppViewportTier.ultraNarrow => 12.5,
+      AppViewportTier.narrow => 13.2,
+      AppViewportTier.compact => 14.0,
+      AppViewportTier.medium => 16.0,
+      AppViewportTier.expanded => 16.5,
+      AppViewportTier.ultraWide => 16.5,
     };
 
     return Column(
@@ -177,7 +268,7 @@ class _HeroContent extends StatelessWidget {
           runSpacing: AppSpacing.xs,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            const _SystemStatusBadge(),
+            _SystemStatusBadge(dense: ultraNarrow),
             if (!_isCompact) const _MicroLabel(text: 'PORTFOLIO / 2026'),
           ],
         ),
@@ -218,7 +309,7 @@ class _HeroContent extends StatelessWidget {
               'Mobile Application Developer',
               style: theme.textTheme.titleLarge?.copyWith(
                 color: colors.onSurface.withValues(alpha: 0.72),
-                fontSize: _isCompact ? 15 : 19,
+                fontSize: roleSize,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -234,7 +325,7 @@ class _HeroContent extends StatelessWidget {
               'Flutter Developer',
               style: theme.textTheme.titleLarge?.copyWith(
                 color: AppColors.primary,
-                fontSize: _isCompact ? 15 : 19,
+                fontSize: roleSize,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -247,7 +338,7 @@ class _HeroContent extends StatelessWidget {
             'I engineer mobile products that move from idea to production.',
             style: TextStyle(
               color: colors.onSurface,
-              fontSize: _isCompact ? 23 : 32,
+              fontSize: statementSize,
               height: _isCompact ? 1.17 : 1.20,
               fontWeight: FontWeight.w700,
               letterSpacing: _isCompact ? -0.35 : -0.7,
@@ -264,7 +355,7 @@ class _HeroContent extends StatelessWidget {
             'testing, and Android/iOS release workflows.',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: colors.onSurface.withValues(alpha: 0.66),
-              fontSize: _isCompact ? 14 : 16.5,
+              fontSize: bodySize,
               height: _isCompact ? 1.52 : 1.62,
             ),
           ),
@@ -321,7 +412,9 @@ class _HeroContent extends StatelessWidget {
 }
 
 class _SystemStatusBadge extends StatelessWidget {
-  const _SystemStatusBadge();
+  const _SystemStatusBadge({this.dense = false});
+
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -334,30 +427,30 @@ class _SystemStatusBadge extends StatelessWidget {
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.28)),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: 7,
+        padding: EdgeInsets.symmetric(
+          horizontal: dense ? 8 : AppSpacing.sm,
+          vertical: dense ? 6 : 7,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
-              width: 7,
-              height: 7,
-              child: DecoratedBox(
+            SizedBox(
+              width: dense ? 6 : 7,
+              height: dense ? 6 : 7,
+              child: const DecoratedBox(
                 decoration: BoxDecoration(
                   color: AppColors.success,
                   shape: BoxShape.circle,
                 ),
               ),
             ),
-            const SizedBox(width: AppSpacing.xs),
+            SizedBox(width: dense ? 6 : AppSpacing.xs),
             Text(
-              '3+ YEARS • PRODUCTION FLUTTER',
+              dense ? '3+ YEARS • FLUTTER' : '3+ YEARS • PRODUCTION FLUTTER',
               style: TextStyle(
                 color: colors.onSurface.withValues(alpha: 0.76),
-                fontSize: 10.5,
-                letterSpacing: 0.9,
+                fontSize: dense ? 9 : 10.5,
+                letterSpacing: dense ? 0.55 : 0.9,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -830,6 +923,8 @@ class _TechPortraitSystemState extends State<_TechPortraitSystem>
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final dense = viewportWidth <= 320;
 
     return MouseRegion(
       cursor: SystemMouseCursors.basic,
@@ -861,10 +956,10 @@ class _TechPortraitSystemState extends State<_TechPortraitSystem>
               ),
             ),
             Positioned(
-              left: 42,
-              right: 42,
-              top: 52,
-              bottom: 78,
+              left: dense ? 24 : 42,
+              right: dense ? 24 : 42,
+              top: dense ? 34 : 52,
+              bottom: dense ? 62 : 78,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOutCubic,
@@ -903,21 +998,22 @@ class _TechPortraitSystemState extends State<_TechPortraitSystem>
                         semanticLabel: 'MD. Asif Ahmed',
                       ),
                       const _PortraitOverlay(),
-                      const Positioned(
-                        top: AppSpacing.md,
-                        right: AppSpacing.md,
-                        child: _FlutterBadge(),
-                      ),
+                      if (!dense)
+                        const Positioned(
+                          top: AppSpacing.md,
+                          right: AppSpacing.md,
+                          child: _FlutterBadge(),
+                        ),
                     ],
                   ),
                 ),
               ),
             ),
             Positioned(
-              left: 18,
-              right: 18,
-              bottom: 18,
-              child: _DeveloperConsole(isDark: isDark),
+              left: dense ? 10 : 18,
+              right: dense ? 10 : 18,
+              bottom: dense ? 10 : 18,
+              child: _DeveloperConsole(isDark: isDark, dense: dense),
             ),
           ],
         ),
@@ -1112,9 +1208,10 @@ class _FlutterBadge extends StatelessWidget {
 }
 
 class _DeveloperConsole extends StatelessWidget {
-  const _DeveloperConsole({required this.isDark});
+  const _DeveloperConsole({required this.isDark, required this.dense});
 
   final bool isDark;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -1123,18 +1220,20 @@ class _DeveloperConsole extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.surface.withValues(alpha: isDark ? 0.93 : 0.96),
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(
+          dense ? AppRadius.md : AppRadius.lg,
+        ),
         border: Border.all(color: colors.outline),
         boxShadow: [
           BoxShadow(
             color: AppColors.black.withValues(alpha: isDark ? 0.25 : 0.08),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
+            blurRadius: dense ? 20 : 28,
+            offset: Offset(0, dense ? 8 : 12),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(dense ? AppSpacing.sm : AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1150,40 +1249,46 @@ class _DeveloperConsole extends StatelessWidget {
                   'DEV / SYSTEM',
                   style: TextStyle(
                     color: colors.onSurface.withValues(alpha: 0.38),
-                    fontSize: 8.5,
-                    letterSpacing: 1.3,
+                    fontSize: dense ? 7.5 : 8.5,
+                    letterSpacing: dense ? 0.8 : 1.3,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: dense ? AppSpacing.xs : AppSpacing.sm),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.terminal_rounded,
                   color: AppColors.primary,
-                  size: 17,
+                  size: dense ? 15 : 17,
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
                     'Flutter • Dart • REST • SQLite',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: colors.onSurface,
-                      fontSize: 11.5,
+                      fontSize: dense ? 10 : 11.5,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: dense ? 4 : 6),
             Text(
-              '> production-ready mobile systems',
+              dense
+                  ? '> production mobile systems'
+                  : '> production-ready mobile systems',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: colors.onSurface.withValues(alpha: 0.52),
-                fontSize: 10.5,
+                fontSize: dense ? 9 : 10.5,
                 height: 1.35,
               ),
             ),

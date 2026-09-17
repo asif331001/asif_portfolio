@@ -20,6 +20,9 @@ class AboutSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final tier = AppBreakpoints.tierForWidth(viewportWidth);
+    final ultraNarrow = tier == AppViewportTier.ultraNarrow;
 
     final introduction = _AboutIntroduction(windowSize: windowSize);
 
@@ -68,16 +71,20 @@ class AboutSection extends StatelessWidget {
                 intensity: isDark ? 1.15 : 0.48,
               ),
             ),
-            Positioned(
-              top: 0,
-              right: _isCompact ? 20 : 36,
-              child: const _SectionIndex(),
-            ),
+            if (!ultraNarrow)
+              Positioned(
+                top: 0,
+                right: _isCompact ? 20 : 36,
+                child: const _SectionIndex(),
+              ),
             Padding(
-              padding: EdgeInsets.all(switch (windowSize) {
-                AppWindowSize.compact => AppSpacing.lg,
-                AppWindowSize.medium => AppSpacing.xl,
-                AppWindowSize.expanded => AppSpacing.xxl,
+              padding: EdgeInsets.all(switch (tier) {
+                AppViewportTier.ultraNarrow => 12.0,
+                AppViewportTier.narrow => 14.0,
+                AppViewportTier.compact => AppSpacing.lg,
+                AppViewportTier.medium => AppSpacing.xl,
+                AppViewportTier.expanded => AppSpacing.xxl,
+                AppViewportTier.ultraWide => AppSpacing.xxl,
               }),
               child: _isExpanded
                   ? Row(
@@ -117,6 +124,26 @@ class _AboutIntroduction extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final tier = AppBreakpoints.tierForWidth(viewportWidth);
+
+    final titleSize = switch (tier) {
+      AppViewportTier.ultraNarrow => 22.0,
+      AppViewportTier.narrow => 24.0,
+      AppViewportTier.compact => 28.0,
+      AppViewportTier.medium => 35.0,
+      AppViewportTier.expanded => 42.0,
+      AppViewportTier.ultraWide => 42.0,
+    };
+
+    final bodySize = switch (tier) {
+      AppViewportTier.ultraNarrow => 12.0,
+      AppViewportTier.narrow => 12.5,
+      AppViewportTier.compact => 14.0,
+      AppViewportTier.medium => 16.0,
+      AppViewportTier.expanded => 16.0,
+      AppViewportTier.ultraWide => 16.0,
+    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,11 +157,7 @@ class _AboutIntroduction extends StatelessWidget {
           'Flutter ownership from product interface to production release.',
           style: TextStyle(
             color: colors.onSurface,
-            fontSize: switch (windowSize) {
-              AppWindowSize.compact => 28,
-              AppWindowSize.medium => 35,
-              AppWindowSize.expanded => 42,
-            },
+            fontSize: titleSize,
             height: 1.11,
             letterSpacing: -0.9,
             fontWeight: FontWeight.w900,
@@ -147,7 +170,7 @@ class _AboutIntroduction extends StatelessWidget {
           'real-world applications for Android and iOS.',
           style: theme.textTheme.bodyLarge?.copyWith(
             color: colors.onSurface.withValues(alpha: 0.70),
-            fontSize: _isCompact ? 14 : 16,
+            fontSize: bodySize,
             height: 1.66,
           ),
         ),
@@ -160,7 +183,7 @@ class _AboutIntroduction extends StatelessWidget {
           'I own the Flutter application layer and client-side delivery.',
           style: theme.textTheme.bodyLarge?.copyWith(
             color: colors.onSurface.withValues(alpha: 0.62),
-            fontSize: _isCompact ? 14 : 16,
+            fontSize: bodySize,
             height: 1.66,
           ),
         ),
@@ -339,6 +362,9 @@ class _CapabilityPanel extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final dense = viewportWidth <= AppBreakpoints.ultraNarrowMax;
+    final narrow = viewportWidth < AppBreakpoints.narrow;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -354,7 +380,15 @@ class _CapabilityPanel extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(compact ? AppSpacing.md : AppSpacing.lg),
+        padding: EdgeInsets.all(
+          dense
+              ? 10
+              : narrow
+              ? 12
+              : compact
+              ? AppSpacing.md
+              : AppSpacing.lg,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

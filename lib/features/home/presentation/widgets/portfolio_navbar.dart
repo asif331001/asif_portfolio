@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/responsive/app_breakpoints.dart';
 import '../../../../core/responsive/responsive_layout.dart';
+import '../../../../core/responsive/responsive_metrics.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -62,13 +63,21 @@ class PortfolioNavbar extends StatelessWidget {
         bottom: false,
         child: ResponsiveLayout(
           builder: (context, windowSize, constraints) {
-            final horizontalPadding = switch (windowSize) {
-              AppWindowSize.compact => AppSpacing.md,
-              AppWindowSize.medium => AppSpacing.xl,
-              AppWindowSize.expanded => AppSpacing.xxl,
-            };
+            final viewportWidth = constraints.maxWidth;
+
+            final tier = AppBreakpoints.tierForWidth(viewportWidth);
+
+            final ultraNarrow = tier == AppViewportTier.ultraNarrow;
+
+            final horizontalPadding = ResponsiveMetrics.pageHorizontalPadding(
+              viewportWidth,
+            );
+
+            final navbarHeight = ResponsiveMetrics.navbarHeight(viewportWidth);
 
             final compact = windowSize != AppWindowSize.expanded;
+
+            final controlSize = ultraNarrow ? 40.0 : 44.0;
 
             return Padding(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
@@ -78,10 +87,13 @@ class PortfolioNavbar extends StatelessWidget {
                     maxWidth: AppBreakpoints.maxContentWidth,
                   ),
                   child: SizedBox(
-                    height: 78,
+                    height: navbarHeight,
                     child: Row(
                       children: [
-                        _Brand(compact: windowSize == AppWindowSize.compact),
+                        _Brand(
+                          compact: windowSize == AppWindowSize.compact,
+                          ultraNarrow: ultraNarrow,
+                        ),
                         const Spacer(),
                         if (!compact) ...[
                           _DesktopNavigation(
@@ -90,21 +102,24 @@ class PortfolioNavbar extends StatelessWidget {
                             onSectionSelected: onSectionSelected,
                           ),
                           const SizedBox(width: AppSpacing.sm),
-                          const _ThemeToggle(),
+                          const _ThemeToggle(size: 46),
                           const SizedBox(width: AppSpacing.sm),
                           _ResumeButton(onPressed: onResumePressed),
                         ] else ...[
-                          const _ThemeToggle(compact: true),
-                          const SizedBox(width: AppSpacing.xs),
+                          _ThemeToggle(size: controlSize),
+                          SizedBox(width: ultraNarrow ? 4 : AppSpacing.xs),
                           _ResumeButton(
                             compact: true,
+                            size: controlSize,
                             onPressed: onResumePressed,
                           ),
-                          const SizedBox(width: AppSpacing.xs),
+                          SizedBox(width: ultraNarrow ? 4 : AppSpacing.xs),
                           _CompactNavigation(
                             activeSection: activeSection,
                             enabledSections: enabledSections,
                             onSectionSelected: onSectionSelected,
+                            size: controlSize,
+                            ultraNarrow: ultraNarrow,
                           ),
                         ],
                       ],
@@ -121,14 +136,17 @@ class PortfolioNavbar extends StatelessWidget {
 }
 
 class _Brand extends StatelessWidget {
-  const _Brand({this.compact = false});
+  const _Brand({this.compact = false, this.ultraNarrow = false});
 
   final bool compact;
+  final bool ultraNarrow;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+
+    final markSize = ultraNarrow ? 32.0 : 34.0;
 
     return Semantics(
       header: true,
@@ -147,15 +165,15 @@ class _Brand extends StatelessWidget {
                 ),
               ],
             ),
-            child: const SizedBox(
-              width: 34,
-              height: 34,
+            child: SizedBox(
+              width: markSize,
+              height: markSize,
               child: Center(
                 child: Text(
                   'A',
                   style: TextStyle(
                     color: AppColors.white,
-                    fontSize: 17,
+                    fontSize: ultraNarrow ? 15 : 17,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -302,7 +320,7 @@ class _DesktopNavItemState extends State<_DesktopNavItem> {
             }
           : null,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: const Duration(milliseconds: 240),
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
           gradient: active && isDark ? AppColors.brandGradient : null,
@@ -331,18 +349,18 @@ class _DesktopNavItemState extends State<_DesktopNavItem> {
           style: TextButton.styleFrom(
             foregroundColor: foregroundColor,
             disabledForegroundColor: colors.onSurface.withValues(alpha: 0.32),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: 10,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             shape: const StadiumBorder(),
           ),
-          child: Text(
-            widget.section.label,
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
             style: TextStyle(
-              fontSize: 12.5,
+              color: foregroundColor,
+              fontSize: 12,
               fontWeight: active ? FontWeight.w800 : FontWeight.w600,
             ),
+            child: Text(widget.section.label),
           ),
         ),
       ),
@@ -351,9 +369,9 @@ class _DesktopNavItemState extends State<_DesktopNavItem> {
 }
 
 class _ThemeToggle extends StatefulWidget {
-  const _ThemeToggle({this.compact = false});
+  const _ThemeToggle({required this.size});
 
-  final bool compact;
+  final double size;
 
   @override
   State<_ThemeToggle> createState() => _ThemeToggleState();
@@ -404,8 +422,8 @@ class _ThemeToggleState extends State<_ThemeToggle> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 260),
                   curve: Curves.easeOutCubic,
-                  width: widget.compact ? 44 : 46,
-                  height: widget.compact ? 44 : 46,
+                  width: widget.size,
+                  height: widget.size,
                   decoration: BoxDecoration(
                     color: _hovered
                         ? colors.primary.withValues(alpha: 0.11)
@@ -416,36 +434,16 @@ class _ThemeToggleState extends State<_ThemeToggle> {
                           ? AppColors.primary.withValues(alpha: 0.58)
                           : colors.outline.withValues(alpha: 0.72),
                     ),
-                    boxShadow: _hovered
-                        ? [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.14),
-                              blurRadius: 18,
-                            ),
-                          ]
-                        : null,
                   ),
                   child: Center(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 260),
-                      transitionBuilder: (child, animation) {
-                        return RotationTransition(
-                          turns: Tween<double>(
-                            begin: 0.82,
-                            end: 1,
-                          ).animate(animation),
-                          child: ScaleTransition(
-                            scale: animation,
-                            child: child,
-                          ),
-                        );
-                      },
                       child: Icon(
                         isDark
                             ? Icons.light_mode_rounded
                             : Icons.dark_mode_rounded,
                         key: ValueKey(isDark),
-                        size: 19,
+                        size: widget.size < 44 ? 17 : 19,
                         color: isDark
                             ? const Color(0xFFFFD66B)
                             : AppColors.secondary,
@@ -467,18 +465,22 @@ class _CompactNavigation extends StatelessWidget {
     required this.activeSection,
     required this.enabledSections,
     required this.onSectionSelected,
+    required this.size,
+    required this.ultraNarrow,
   });
 
   final PortfolioSection activeSection;
   final Set<PortfolioSection> enabledSections;
   final ValueChanged<PortfolioSection> onSectionSelected;
+  final double size;
+  final bool ultraNarrow;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
     return PopupMenuButton<PortfolioSection>(
-      tooltip: 'Open navigation menu',
+      tooltip: 'Current section: ${activeSection.label}',
       color: colors.surface,
       surfaceTintColor: AppColors.transparent,
       elevation: 12,
@@ -497,7 +499,7 @@ class _CompactNavigation extends StatelessWidget {
               child: Row(
                 children: [
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
+                    duration: const Duration(milliseconds: 220),
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
@@ -536,16 +538,44 @@ class _CompactNavigation extends StatelessWidget {
             ),
         ];
       },
-      child: DecoratedBox(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        height: size,
+        width: ultraNarrow ? 78 : 96,
         decoration: BoxDecoration(
-          color: colors.surface.withValues(alpha: 0.78),
+          color: AppColors.primary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: colors.outline),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.22)),
         ),
-        child: SizedBox(
-          width: 46,
-          height: 46,
-          child: Icon(Icons.menu_rounded, color: colors.onSurface),
+        padding: EdgeInsets.symmetric(horizontal: ultraNarrow ? 7 : 9),
+        child: Row(
+          children: [
+            Icon(
+              Icons.menu_rounded,
+              size: ultraNarrow ? 16 : 17,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 5),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+                child: Text(
+                  activeSection.label,
+                  key: ValueKey(activeSection),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colors.onSurface,
+                    fontSize: ultraNarrow ? 9 : 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -553,10 +583,15 @@ class _CompactNavigation extends StatelessWidget {
 }
 
 class _ResumeButton extends StatefulWidget {
-  const _ResumeButton({required this.onPressed, this.compact = false});
+  const _ResumeButton({
+    required this.onPressed,
+    this.compact = false,
+    this.size = 46,
+  });
 
   final VoidCallback? onPressed;
   final bool compact;
+  final double size;
 
   @override
   State<_ResumeButton> createState() => _ResumeButtonState();
@@ -598,24 +633,18 @@ class _ResumeButtonState extends State<_ResumeButton> {
                 gradient: enabled ? AppColors.brandGradient : null,
                 color: enabled ? null : colors.surface,
                 borderRadius: BorderRadius.circular(AppRadius.md),
-                boxShadow: enabled
-                    ? [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(
-                            alpha: _hovered ? 0.28 : 0.15,
-                          ),
-                          blurRadius: _hovered ? 20 : 12,
-                        ),
-                      ]
-                    : null,
               ),
               child: SizedBox(
-                width: 46,
-                height: 46,
+                width: widget.size,
+                height: widget.size,
                 child: IconButton(
                   tooltip: 'View Resume',
                   onPressed: widget.onPressed,
-                  icon: const Icon(Icons.description_outlined, size: 18),
+                  padding: EdgeInsets.zero,
+                  icon: Icon(
+                    Icons.description_outlined,
+                    size: widget.size < 44 ? 17 : 18,
+                  ),
                   color: AppColors.white,
                   disabledColor: colors.onSurface.withValues(alpha: 0.38),
                 ),
@@ -651,16 +680,6 @@ class _ResumeButtonState extends State<_ResumeButton> {
             gradient: enabled ? AppColors.brandGradient : null,
             color: enabled ? null : colors.surface,
             borderRadius: BorderRadius.circular(AppRadius.md),
-            boxShadow: enabled
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(
-                        alpha: _hovered ? 0.28 : 0.16,
-                      ),
-                      blurRadius: _hovered ? 22 : 14,
-                    ),
-                  ]
-                : null,
           ),
           child: FilledButton.icon(
             onPressed: widget.onPressed,

@@ -6,16 +6,29 @@ class ThemeController extends ChangeNotifier {
 
   static final ThemeController instance = ThemeController._();
 
-  static const String _themePreferenceKey = 'portfolio_theme_mode';
+  static const String _themePreferenceKey = 'portfolio_theme_mode_system_v2';
 
-  ThemeMode _themeMode = ThemeMode.dark;
+  ThemeMode _themeMode = ThemeMode.system;
   bool _initialized = false;
 
   ThemeMode get themeMode => _themeMode;
 
-  bool get isDarkMode => _themeMode == ThemeMode.dark;
+  bool get isSystemMode => _themeMode == ThemeMode.system;
 
-  bool get isLightMode => _themeMode == ThemeMode.light;
+  bool get isDarkMode {
+    if (_themeMode == ThemeMode.dark) {
+      return true;
+    }
+
+    if (_themeMode == ThemeMode.light) {
+      return false;
+    }
+
+    return WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+        Brightness.dark;
+  }
+
+  bool get isLightMode => !isDarkMode;
 
   Future<void> initialize() async {
     if (_initialized) {
@@ -29,10 +42,11 @@ class ThemeController extends ChangeNotifier {
       _themeMode = switch (savedTheme) {
         'light' => ThemeMode.light,
         'dark' => ThemeMode.dark,
-        _ => ThemeMode.dark,
+        'system' => ThemeMode.system,
+        _ => ThemeMode.system,
       };
     } catch (_) {
-      _themeMode = ThemeMode.dark;
+      _themeMode = ThemeMode.system;
     } finally {
       _initialized = true;
       notifyListeners();
@@ -40,16 +54,16 @@ class ThemeController extends ChangeNotifier {
   }
 
   Future<void> toggleTheme() async {
-    await setThemeMode(
-      _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark,
-    );
+    final targetMode = isDarkMode ? ThemeMode.light : ThemeMode.dark;
+
+    await setThemeMode(targetMode);
+  }
+
+  Future<void> useSystemTheme() async {
+    await setThemeMode(ThemeMode.system);
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    if (mode != ThemeMode.dark && mode != ThemeMode.light) {
-      return;
-    }
-
     if (_themeMode == mode) {
       return;
     }
@@ -60,12 +74,13 @@ class ThemeController extends ChangeNotifier {
     try {
       final preferences = await SharedPreferences.getInstance();
 
-      await preferences.setString(
-        _themePreferenceKey,
-        mode == ThemeMode.light ? 'light' : 'dark',
-      );
-    } catch (_) {
-      // Theme still changes for the current session even if persistence fails.
-    }
+      final value = switch (mode) {
+        ThemeMode.light => 'light',
+        ThemeMode.dark => 'dark',
+        ThemeMode.system => 'system',
+      };
+
+      await preferences.setString(_themePreferenceKey, value);
+    } catch (_) {}
   }
 }

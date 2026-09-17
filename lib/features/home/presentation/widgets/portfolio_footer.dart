@@ -31,6 +31,8 @@ class PortfolioFooter extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final tier = AppBreakpoints.tierForWidth(viewportWidth);
 
     final brand = _FooterIdentity(compact: _isCompact);
 
@@ -98,10 +100,13 @@ class PortfolioFooter extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(switch (windowSize) {
-                AppWindowSize.compact => AppSpacing.lg,
-                AppWindowSize.medium => AppSpacing.xl,
-                AppWindowSize.expanded => AppSpacing.xxl,
+              padding: EdgeInsets.all(switch (tier) {
+                AppViewportTier.ultraNarrow => 12.0,
+                AppViewportTier.narrow => 14.0,
+                AppViewportTier.compact => AppSpacing.lg,
+                AppViewportTier.medium => AppSpacing.xl,
+                AppViewportTier.expanded => AppSpacing.xxl,
+                AppViewportTier.ultraWide => AppSpacing.xxl,
               }),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

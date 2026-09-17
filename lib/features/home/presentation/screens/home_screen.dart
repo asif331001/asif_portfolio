@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_links.dart';
 import '../../../../core/responsive/app_breakpoints.dart';
 import '../../../../core/responsive/responsive_layout.dart';
+import '../../../../core/responsive/responsive_metrics.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/services/external_link_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
 import '../widgets/about_section.dart';
 import '../widgets/animated_portfolio_background.dart';
 import '../widgets/contact_section.dart';
@@ -36,6 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey _skillsSectionKey = GlobalKey();
   final GlobalKey _contactSectionKey = GlobalKey();
 
+  PortfolioSection _activeSection = PortfolioSection.home;
+
   static const Set<PortfolioSection> _enabledSections = {
     PortfolioSection.home,
     PortfolioSection.about,
@@ -46,9 +48,96 @@ class _HomeScreenState extends State<HomeScreen> {
   };
 
   @override
+  void initState() {
+    super.initState();
+
+    _scrollController.addListener(_handleScroll);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      _updateActiveSection();
+    });
+  }
+
+  @override
   void dispose() {
-    _scrollController.dispose();
+    _scrollController
+      ..removeListener(_handleScroll)
+      ..dispose();
+
     super.dispose();
+  }
+
+  void _handleScroll() {
+    _updateActiveSection();
+  }
+
+  void _updateActiveSection() {
+    if (!mounted) {
+      return;
+    }
+
+    if (_scrollController.hasClients) {
+      final position = _scrollController.position;
+
+      if (position.pixels >= position.maxScrollExtent - 64) {
+        _setActiveSection(PortfolioSection.contact);
+        return;
+      }
+    }
+
+    final viewportHeight = MediaQuery.sizeOf(context).height;
+
+    final activationLine = (viewportHeight * 0.26)
+        .clamp(140.0, 230.0)
+        .toDouble();
+
+    var nextSection = PortfolioSection.home;
+
+    final sections = <MapEntry<PortfolioSection, GlobalKey>>[
+      MapEntry(PortfolioSection.about, _aboutSectionKey),
+      MapEntry(PortfolioSection.experience, _experienceSectionKey),
+      MapEntry(PortfolioSection.projects, _projectsSectionKey),
+      MapEntry(PortfolioSection.skills, _skillsSectionKey),
+      MapEntry(PortfolioSection.contact, _contactSectionKey),
+    ];
+
+    for (final entry in sections) {
+      final sectionContext = entry.value.currentContext;
+
+      if (sectionContext == null) {
+        continue;
+      }
+
+      final renderObject = sectionContext.findRenderObject();
+
+      if (renderObject is! RenderBox || !renderObject.hasSize) {
+        continue;
+      }
+
+      final sectionTop = renderObject.localToGlobal(Offset.zero).dy;
+
+      if (sectionTop <= activationLine) {
+        nextSection = entry.key;
+      } else {
+        break;
+      }
+    }
+
+    _setActiveSection(nextSection);
+  }
+
+  void _setActiveSection(PortfolioSection section) {
+    if (_activeSection == section || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _activeSection = section;
+    });
   }
 
   void _handleSectionSelected(PortfolioSection section) {
@@ -75,8 +164,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     _scrollController.animateTo(
       0,
-      duration: const Duration(milliseconds: 450),
-      curve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeInOutCubic,
     );
   }
 
@@ -89,9 +178,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     Scrollable.ensureVisible(
       sectionContext,
-      duration: const Duration(milliseconds: 550),
-      curve: Curves.easeOutCubic,
-      alignment: 0.04,
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeInOutCubic,
+      alignment: 0.035,
     );
   }
 
@@ -143,25 +232,26 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             PortfolioNavbar(
-              activeSection: PortfolioSection.home,
+              activeSection: _activeSection,
               enabledSections: _enabledSections,
               onSectionSelected: _handleSectionSelected,
               onResumePressed: _viewResume,
             ),
             Expanded(
               child: ResponsiveLayout(
-                builder: (context, windowSize, _) {
-                  final horizontalPadding = switch (windowSize) {
-                    AppWindowSize.compact => AppSpacing.md,
-                    AppWindowSize.medium => AppSpacing.xl,
-                    AppWindowSize.expanded => AppSpacing.xxl,
-                  };
+                builder: (context, windowSize, constraints) {
+                  final viewportWidth = constraints.maxWidth;
 
-                  final sectionGap = switch (windowSize) {
-                    AppWindowSize.compact => AppSpacing.lg,
-                    AppWindowSize.medium => AppSpacing.xl,
-                    AppWindowSize.expanded => AppSpacing.xxl,
-                  };
+                  final horizontalPadding =
+                      ResponsiveMetrics.pageHorizontalPadding(viewportWidth);
+
+                  final verticalPadding = ResponsiveMetrics.pageVerticalPadding(
+                    viewportWidth,
+                  );
+
+                  final sectionGap = ResponsiveMetrics.sectionGap(
+                    viewportWidth,
+                  );
 
                   return Stack(
                     children: [
@@ -174,11 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         controller: _scrollController,
                         padding: EdgeInsets.symmetric(
                           horizontal: horizontalPadding,
-                          vertical: switch (windowSize) {
-                            AppWindowSize.compact => AppSpacing.md,
-                            AppWindowSize.medium => AppSpacing.xl,
-                            AppWindowSize.expanded => AppSpacing.xxl,
-                          },
+                          vertical: verticalPadding,
                         ),
                         child: Center(
                           child: ConstrainedBox(

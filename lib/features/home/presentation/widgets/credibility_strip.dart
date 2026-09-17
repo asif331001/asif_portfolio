@@ -19,7 +19,7 @@ class CredibilityStrip extends StatelessWidget {
         final columnCount = switch (windowSize) {
           AppWindowSize.expanded => 4,
           AppWindowSize.medium => 2,
-          AppWindowSize.compact => constraints.maxWidth >= 340 ? 2 : 1,
+          AppWindowSize.compact => constraints.maxWidth >= 430 ? 2 : 1,
         };
 
         final spacing = compact ? AppSpacing.xs : AppSpacing.sm;

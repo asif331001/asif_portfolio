@@ -19,6 +19,27 @@ class SkillsSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final tier = AppBreakpoints.tierForWidth(viewportWidth);
+    final ultraNarrow = tier == AppViewportTier.ultraNarrow;
+
+    final titleSize = switch (tier) {
+      AppViewportTier.ultraNarrow => 22.0,
+      AppViewportTier.narrow => 24.0,
+      AppViewportTier.compact => 28.0,
+      AppViewportTier.medium => 35.0,
+      AppViewportTier.expanded => 42.0,
+      AppViewportTier.ultraWide => 42.0,
+    };
+
+    final bodySize = switch (tier) {
+      AppViewportTier.ultraNarrow => 12.0,
+      AppViewportTier.narrow => 12.5,
+      AppViewportTier.compact => 14.0,
+      AppViewportTier.medium => 16.0,
+      AppViewportTier.expanded => 16.0,
+      AppViewportTier.ultraWide => 16.0,
+    };
 
     final totalSkills = _skillGroups.fold<int>(
       0,
@@ -68,16 +89,20 @@ class SkillsSection extends StatelessWidget {
                 intensity: isDark ? 1.08 : 0.42,
               ),
             ),
-            Positioned(
-              top: 0,
-              right: _isCompact ? 20 : 36,
-              child: const _SectionIndex(),
-            ),
+            if (!ultraNarrow)
+              Positioned(
+                top: 0,
+                right: _isCompact ? 20 : 36,
+                child: const _SectionIndex(),
+              ),
             Padding(
-              padding: EdgeInsets.all(switch (windowSize) {
-                AppWindowSize.compact => AppSpacing.lg,
-                AppWindowSize.medium => AppSpacing.xl,
-                AppWindowSize.expanded => AppSpacing.xxl,
+              padding: EdgeInsets.all(switch (tier) {
+                AppViewportTier.ultraNarrow => 12.0,
+                AppViewportTier.narrow => 14.0,
+                AppViewportTier.compact => AppSpacing.lg,
+                AppViewportTier.medium => AppSpacing.xl,
+                AppViewportTier.expanded => AppSpacing.xxl,
+                AppViewportTier.ultraWide => AppSpacing.xxl,
               }),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,11 +116,7 @@ class SkillsSection extends StatelessWidget {
                     'A Flutter stack shaped by production application work.',
                     style: TextStyle(
                       color: colors.onSurface,
-                      fontSize: switch (windowSize) {
-                        AppWindowSize.compact => 28,
-                        AppWindowSize.medium => 35,
-                        AppWindowSize.expanded => 42,
-                      },
+                      fontSize: titleSize,
                       height: 1.11,
                       letterSpacing: -0.9,
                       fontWeight: FontWeight.w900,
@@ -111,7 +132,7 @@ class SkillsSection extends StatelessWidget {
                       'maintenance, and production delivery.',
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.66),
-                        fontSize: _isCompact ? 14 : 16,
+                        fontSize: bodySize,
                         height: 1.66,
                       ),
                     ),
@@ -368,6 +389,8 @@ class _SkillGroupCardState extends State<_SkillGroupCard> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final dense =
+        MediaQuery.sizeOf(context).width <= AppBreakpoints.ultraNarrowMax;
 
     final indexLabel = (widget.index + 1).toString().padLeft(2, '0');
 
@@ -390,7 +413,7 @@ class _SkillGroupCardState extends State<_SkillGroupCard> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 190),
           curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(dense ? 12 : AppSpacing.lg),
           decoration: BoxDecoration(
             color: _hovered
                 ? AppColors.primary.withValues(alpha: isDark ? 0.075 : 0.055)
@@ -426,11 +449,11 @@ class _SkillGroupCardState extends State<_SkillGroupCard> {
                       ),
                     ),
                     child: SizedBox(
-                      width: 44,
-                      height: 44,
+                      width: dense ? 38 : 44,
+                      height: dense ? 38 : 44,
                       child: Icon(
                         widget.group.icon,
-                        size: 21,
+                        size: dense ? 18 : 21,
                         color: AppColors.primary,
                       ),
                     ),
@@ -441,7 +464,7 @@ class _SkillGroupCardState extends State<_SkillGroupCard> {
                       widget.group.title,
                       style: TextStyle(
                         color: colors.onSurface,
-                        fontSize: 18,
+                        fontSize: dense ? 15 : 18,
                         height: 1.2,
                         fontWeight: FontWeight.w900,
                       ),
@@ -479,7 +502,7 @@ class _SkillGroupCardState extends State<_SkillGroupCard> {
                 widget.group.description,
                 style: TextStyle(
                   color: colors.onSurface.withValues(alpha: 0.57),
-                  fontSize: 12.5,
+                  fontSize: dense ? 11 : 12.5,
                   height: 1.52,
                 ),
               ),

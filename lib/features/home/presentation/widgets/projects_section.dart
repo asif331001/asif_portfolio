@@ -21,6 +21,27 @@ class ProjectsSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final tier = AppBreakpoints.tierForWidth(viewportWidth);
+    final ultraNarrow = tier == AppViewportTier.ultraNarrow;
+
+    final titleSize = switch (tier) {
+      AppViewportTier.ultraNarrow => 22.0,
+      AppViewportTier.narrow => 24.0,
+      AppViewportTier.compact => 28.0,
+      AppViewportTier.medium => 35.0,
+      AppViewportTier.expanded => 42.0,
+      AppViewportTier.ultraWide => 42.0,
+    };
+
+    final bodySize = switch (tier) {
+      AppViewportTier.ultraNarrow => 12.0,
+      AppViewportTier.narrow => 12.5,
+      AppViewportTier.compact => 14.0,
+      AppViewportTier.medium => 16.0,
+      AppViewportTier.expanded => 16.0,
+      AppViewportTier.ultraWide => 16.0,
+    };
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(
@@ -65,16 +86,20 @@ class ProjectsSection extends StatelessWidget {
                 intensity: isDark ? 1.10 : 0.44,
               ),
             ),
-            Positioned(
-              top: 0,
-              right: _isCompact ? 20 : 36,
-              child: const _SectionIndex(),
-            ),
+            if (!ultraNarrow)
+              Positioned(
+                top: 0,
+                right: _isCompact ? 20 : 36,
+                child: const _SectionIndex(),
+              ),
             Padding(
-              padding: EdgeInsets.all(switch (windowSize) {
-                AppWindowSize.compact => AppSpacing.lg,
-                AppWindowSize.medium => AppSpacing.xl,
-                AppWindowSize.expanded => AppSpacing.xxl,
+              padding: EdgeInsets.all(switch (tier) {
+                AppViewportTier.ultraNarrow => 12.0,
+                AppViewportTier.narrow => 14.0,
+                AppViewportTier.compact => AppSpacing.lg,
+                AppViewportTier.medium => AppSpacing.xl,
+                AppViewportTier.expanded => AppSpacing.xxl,
+                AppViewportTier.ultraWide => AppSpacing.xxl,
               }),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,11 +113,7 @@ class ProjectsSection extends StatelessWidget {
                     'Flutter products built for real users and real workflows.',
                     style: TextStyle(
                       color: colors.onSurface,
-                      fontSize: switch (windowSize) {
-                        AppWindowSize.compact => 28,
-                        AppWindowSize.medium => 35,
-                        AppWindowSize.expanded => 42,
-                      },
+                      fontSize: titleSize,
                       height: 1.11,
                       letterSpacing: -0.9,
                       fontWeight: FontWeight.w900,
@@ -107,7 +128,7 @@ class ProjectsSection extends StatelessWidget {
                       'and human resource management.',
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.66),
-                        fontSize: _isCompact ? 14 : 16,
+                        fontSize: bodySize,
                         height: 1.66,
                       ),
                     ),
@@ -373,10 +394,14 @@ class _ProjectCardState extends State<_ProjectCard> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final dense =
+        MediaQuery.sizeOf(context).width <= AppBreakpoints.ultraNarrowMax;
 
     final radius = widget.compact ? AppRadius.lg : AppRadius.xl;
 
-    final visibleTechnologyCount = widget.featured
+    final visibleTechnologyCount = dense
+        ? 3
+        : widget.featured
         ? 6
         : widget.compact
         ? 4
@@ -458,7 +483,11 @@ class _ProjectCardState extends State<_ProjectCard> {
                   ),
                   Padding(
                     padding: EdgeInsets.all(
-                      widget.compact ? AppSpacing.md : AppSpacing.lg,
+                      dense
+                          ? 12
+                          : widget.compact
+                          ? AppSpacing.md
+                          : AppSpacing.lg,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,7 +500,9 @@ class _ProjectCardState extends State<_ProjectCard> {
                                 widget.project.title,
                                 style: TextStyle(
                                   color: colors.onSurface,
-                                  fontSize: widget.featured
+                                  fontSize: dense
+                                      ? 18
+                                      : widget.featured
                                       ? widget.compact
                                             ? 21
                                             : 24
@@ -495,7 +526,11 @@ class _ProjectCardState extends State<_ProjectCard> {
                           widget.project.subtitle,
                           style: TextStyle(
                             color: AppColors.primary,
-                            fontSize: widget.compact ? 12.5 : 13.5,
+                            fontSize: dense
+                                ? 11.5
+                                : widget.compact
+                                ? 12.5
+                                : 13.5,
                             height: 1.4,
                             fontWeight: FontWeight.w700,
                           ),
@@ -509,7 +544,11 @@ class _ProjectCardState extends State<_ProjectCard> {
                           widget.project.summary,
                           style: TextStyle(
                             color: colors.onSurface.withValues(alpha: 0.60),
-                            fontSize: widget.compact ? 13 : 14,
+                            fontSize: dense
+                                ? 11.5
+                                : widget.compact
+                                ? 13
+                                : 14,
                             height: 1.56,
                           ),
                         ),
@@ -570,6 +609,9 @@ class _ProjectPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dense =
+        MediaQuery.sizeOf(context).width <= AppBreakpoints.ultraNarrowMax;
+
     return AspectRatio(
       aspectRatio: featured ? 16 / 8.4 : 16 / 9,
       child: Stack(
@@ -626,7 +668,7 @@ class _ProjectPreview extends StatelessWidget {
               children: [
                 Flexible(child: _PlatformBadge(label: project.platformLabel)),
                 const Spacer(),
-                if (featured) const _PreviewSignal(),
+                if (featured && !dense) const _PreviewSignal(),
               ],
             ),
           ),

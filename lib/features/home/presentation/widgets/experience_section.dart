@@ -11,7 +11,6 @@ class ExperienceSection extends StatelessWidget {
 
   final AppWindowSize windowSize;
 
-  bool get _isCompact => windowSize == AppWindowSize.compact;
   bool get _isExpanded => windowSize == AppWindowSize.expanded;
 
   @override
@@ -19,16 +18,48 @@ class ExperienceSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final tier = AppBreakpoints.tierForWidth(viewportWidth);
+
+    final ultraNarrow = tier == AppViewportTier.ultraNarrow;
+    final narrow =
+        tier == AppViewportTier.ultraNarrow || tier == AppViewportTier.narrow;
+    final compact = viewportWidth < AppBreakpoints.medium;
+
+    final radius = compact ? AppRadius.lg : AppRadius.xl;
+
+    final sectionPadding = switch (tier) {
+      AppViewportTier.ultraNarrow => 12.0,
+      AppViewportTier.narrow => 14.0,
+      AppViewportTier.compact => 20.0,
+      AppViewportTier.medium => 32.0,
+      AppViewportTier.expanded => 48.0,
+      AppViewportTier.ultraWide => 48.0,
+    };
+
+    final titleSize = switch (tier) {
+      AppViewportTier.ultraNarrow => 22.0,
+      AppViewportTier.narrow => 24.0,
+      AppViewportTier.compact => 28.0,
+      AppViewportTier.medium => 35.0,
+      AppViewportTier.expanded => 42.0,
+      AppViewportTier.ultraWide => 42.0,
+    };
+
+    final bodySize = switch (tier) {
+      AppViewportTier.ultraNarrow => 12.0,
+      AppViewportTier.narrow => 12.5,
+      AppViewportTier.compact => 14.0,
+      AppViewportTier.medium => 16.0,
+      AppViewportTier.expanded => 16.0,
+      AppViewportTier.ultraWide => 16.0,
+    };
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(
-        _isCompact ? AppRadius.lg : AppRadius.xl,
-      ),
+      borderRadius: BorderRadius.circular(radius),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(
-            _isCompact ? AppRadius.lg : AppRadius.xl,
-          ),
+          borderRadius: BorderRadius.circular(radius),
           border: Border.all(
             color: colors.outline.withValues(alpha: isDark ? 0.90 : 0.74),
           ),
@@ -50,8 +81,8 @@ class ExperienceSection extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: AppColors.black.withValues(alpha: isDark ? 0.24 : 0.07),
-              blurRadius: 36,
-              offset: const Offset(0, 16),
+              blurRadius: compact ? 24 : 36,
+              offset: Offset(0, compact ? 10 : 16),
             ),
           ],
         ),
@@ -59,44 +90,54 @@ class ExperienceSection extends StatelessWidget {
           children: [
             Positioned.fill(
               child: AnimatedSectionBackground(
-                compact: _isCompact,
+                compact: compact,
                 intensity: isDark ? 1.12 : 0.46,
               ),
             ),
-            Positioned(
-              top: 0,
-              right: _isCompact ? 20 : 36,
-              child: const _SectionIndex(),
-            ),
+            if (!ultraNarrow)
+              Positioned(
+                top: 0,
+                right: narrow ? 14 : 36,
+                child: _SectionIndex(dense: narrow),
+              ),
             Padding(
-              padding: EdgeInsets.all(switch (windowSize) {
-                AppWindowSize.compact => AppSpacing.lg,
-                AppWindowSize.medium => AppSpacing.xl,
-                AppWindowSize.expanded => AppSpacing.xxl,
-              }),
+              padding: EdgeInsets.all(sectionPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _SectionLabel(
+                  _SectionLabel(
                     icon: Icons.work_outline_rounded,
-                    label: 'EXPERIENCE / CAREER',
+                    label: narrow ? 'EXPERIENCE' : 'EXPERIENCE / CAREER',
+                    dense: narrow,
                   ),
-                  SizedBox(height: _isCompact ? AppSpacing.md : AppSpacing.lg),
+                  SizedBox(
+                    height: ultraNarrow
+                        ? 12
+                        : compact
+                        ? AppSpacing.md
+                        : AppSpacing.lg,
+                  ),
                   Text(
                     'Professional Flutter ownership across real production products.',
                     style: TextStyle(
                       color: colors.onSurface,
-                      fontSize: switch (windowSize) {
-                        AppWindowSize.compact => 28,
-                        AppWindowSize.medium => 35,
-                        AppWindowSize.expanded => 42,
-                      },
-                      height: 1.11,
-                      letterSpacing: -0.9,
+                      fontSize: titleSize,
+                      height: 1.12,
+                      letterSpacing: ultraNarrow
+                          ? -0.35
+                          : compact
+                          ? -0.55
+                          : -0.9,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  SizedBox(height: _isCompact ? AppSpacing.md : AppSpacing.lg),
+                  SizedBox(
+                    height: ultraNarrow
+                        ? 10
+                        : compact
+                        ? AppSpacing.md
+                        : AppSpacing.lg,
+                  ),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 860),
                     child: Text(
@@ -106,12 +147,18 @@ class ExperienceSection extends StatelessWidget {
                       'device testing, maintenance, and Android/iOS releases.',
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.66),
-                        fontSize: _isCompact ? 14 : 16,
-                        height: 1.66,
+                        fontSize: bodySize,
+                        height: ultraNarrow ? 1.52 : 1.66,
                       ),
                     ),
                   ),
-                  SizedBox(height: _isCompact ? AppSpacing.lg : AppSpacing.xxl),
+                  SizedBox(
+                    height: ultraNarrow
+                        ? 16
+                        : compact
+                        ? AppSpacing.lg
+                        : AppSpacing.xxl,
+                  ),
                   if (_isExpanded)
                     const Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,16 +169,22 @@ class ExperienceSection extends StatelessWidget {
                       ],
                     )
                   else
-                    const Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _RoleConsole(),
-                        SizedBox(height: AppSpacing.md),
-                        _OwnershipSystem(),
+                        _RoleConsole(dense: ultraNarrow, narrow: narrow),
+                        SizedBox(height: ultraNarrow ? 10 : AppSpacing.md),
+                        _OwnershipSystem(dense: ultraNarrow, narrow: narrow),
                       ],
                     ),
-                  SizedBox(height: _isCompact ? AppSpacing.md : AppSpacing.lg),
-                  _DeliveryScope(compact: _isCompact),
+                  SizedBox(
+                    height: ultraNarrow
+                        ? 10
+                        : compact
+                        ? AppSpacing.md
+                        : AppSpacing.lg,
+                  ),
+                  _DeliveryScope(compact: compact, dense: ultraNarrow),
                 ],
               ),
             ),
@@ -143,7 +196,10 @@ class ExperienceSection extends StatelessWidget {
 }
 
 class _RoleConsole extends StatelessWidget {
-  const _RoleConsole();
+  const _RoleConsole({this.dense = false, this.narrow = false});
+
+  final bool dense;
+  final bool narrow;
 
   @override
   Widget build(BuildContext context) {
@@ -151,111 +207,110 @@ class _RoleConsole extends StatelessWidget {
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
+    final padding = dense
+        ? 12.0
+        : narrow
+        ? 14.0
+        : AppSpacing.lg;
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.surface.withValues(alpha: isDark ? 0.76 : 0.91),
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(
+          dense ? AppRadius.md : AppRadius.lg,
+        ),
         border: Border.all(color: colors.outline.withValues(alpha: 0.80)),
         boxShadow: [
           BoxShadow(
             color: AppColors.black.withValues(alpha: isDark ? 0.18 : 0.06),
-            blurRadius: 26,
-            offset: const Offset(0, 12),
+            blurRadius: dense ? 18 : 26,
+            offset: Offset(0, dense ? 7 : 12),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _ConsoleHeader(),
-            const SizedBox(height: AppSpacing.lg),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.17),
-                        blurRadius: 20,
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: Image.asset(
-                      'assets/medigeneit_logo.jpeg',
-                      fit: BoxFit.contain,
-                      semanticLabel: 'Medigene IT logo',
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
+            _ConsoleHeader(dense: dense),
+            SizedBox(
+              height: dense
+                  ? 12
+                  : narrow
+                  ? 14
+                  : AppSpacing.lg,
+            ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final stackIdentity = constraints.maxWidth < 180;
+
+                if (stackIdentity) {
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'App Developer',
-                        style: TextStyle(
-                          color: colors.onSurface,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      ShaderMask(
-                        blendMode: BlendMode.srcIn,
-                        shaderCallback: (bounds) {
-                          return AppColors.brandGradient.createShader(bounds);
-                        },
-                        child: const Text(
-                          'Medigene IT',
-                          style: TextStyle(
-                            color: AppColors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
+                      _CompanyLogo(size: dense ? 42 : 48),
+                      const SizedBox(height: 10),
+                      _RoleIdentity(dense: dense),
                     ],
-                  ),
-                ),
-              ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _CompanyLogo(
+                      size: dense
+                          ? 42
+                          : narrow
+                          ? 48
+                          : 56,
+                    ),
+                    SizedBox(width: dense ? 8 : AppSpacing.sm),
+                    Expanded(child: _RoleIdentity(dense: dense)),
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: AppSpacing.md),
-            const Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
+            SizedBox(height: dense ? 12 : AppSpacing.md),
+            Wrap(
+              spacing: dense ? 5 : AppSpacing.xs,
+              runSpacing: dense ? 5 : AppSpacing.xs,
               children: [
                 _MetaChip(
                   icon: Icons.calendar_month_outlined,
-                  label: 'Feb 2023 — Present',
+                  label: dense ? 'Feb 2023 — Present' : 'Feb 2023 — Present',
+                  dense: dense,
                 ),
-                _MetaChip(icon: Icons.flutter_dash_rounded, label: 'Flutter'),
-                _MetaChip(icon: Icons.devices_outlined, label: 'Android + iOS'),
+                _MetaChip(
+                  icon: Icons.flutter_dash_rounded,
+                  label: 'Flutter',
+                  dense: dense,
+                ),
+                _MetaChip(
+                  icon: Icons.devices_outlined,
+                  label: dense ? 'Android + iOS' : 'Android + iOS',
+                  dense: dense,
+                ),
               ],
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: dense ? 14 : AppSpacing.lg),
             Text(
               'I serve as the Flutter developer responsible for the mobile '
               'application layer while collaborating with backend developers '
               'who build and provide the required APIs.',
               style: TextStyle(
                 color: colors.onSurface.withValues(alpha: 0.66),
-                fontSize: 14,
-                height: 1.62,
+                fontSize: dense
+                    ? 11.5
+                    : narrow
+                    ? 12.5
+                    : 14,
+                height: dense ? 1.52 : 1.62,
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            const _RoleOwnershipCallout(),
+            SizedBox(height: dense ? 14 : AppSpacing.lg),
+            _RoleOwnershipCallout(dense: dense),
           ],
         ),
       ),
@@ -263,8 +318,84 @@ class _RoleConsole extends StatelessWidget {
   }
 }
 
+class _CompanyLogo extends StatelessWidget {
+  const _CompanyLogo({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      padding: EdgeInsets.all(size <= 44 ? 4 : 5),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.17),
+            blurRadius: 20,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Image.asset(
+          'assets/medigeneit_logo.jpeg',
+          fit: BoxFit.contain,
+          semanticLabel: 'Medigene IT logo',
+        ),
+      ),
+    );
+  }
+}
+
+class _RoleIdentity extends StatelessWidget {
+  const _RoleIdentity({required this.dense});
+
+  final bool dense;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'App Developer',
+          style: TextStyle(
+            color: colors.onSurface,
+            fontSize: dense ? 17 : 22,
+            height: 1.15,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        SizedBox(height: dense ? 2 : 3),
+        ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (bounds) {
+            return AppColors.brandGradient.createShader(bounds);
+          },
+          child: Text(
+            'Medigene IT',
+            style: TextStyle(
+              color: AppColors.white,
+              fontSize: dense ? 12.5 : 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ConsoleHeader extends StatelessWidget {
-  const _ConsoleHeader();
+  const _ConsoleHeader({required this.dense});
+
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -272,19 +403,24 @@ class _ConsoleHeader extends StatelessWidget {
 
     return Row(
       children: [
-        const _ConsoleDot(color: AppColors.error),
-        const SizedBox(width: 5),
-        const _ConsoleDot(color: AppColors.warning),
-        const SizedBox(width: 5),
-        const _ConsoleDot(color: AppColors.success),
+        _ConsoleDot(color: AppColors.error, size: dense ? 6 : 7),
+        const SizedBox(width: 4),
+        _ConsoleDot(color: AppColors.warning, size: dense ? 6 : 7),
+        const SizedBox(width: 4),
+        _ConsoleDot(color: AppColors.success, size: dense ? 6 : 7),
         const Spacer(),
-        Text(
-          'CAREER / CURRENT ROLE',
-          style: TextStyle(
-            color: colors.onSurface.withValues(alpha: 0.34),
-            fontSize: 9,
-            letterSpacing: 1.4,
-            fontWeight: FontWeight.w800,
+        Flexible(
+          child: Text(
+            dense ? 'CURRENT ROLE' : 'CAREER / CURRENT ROLE',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.end,
+            style: TextStyle(
+              color: colors.onSurface.withValues(alpha: 0.34),
+              fontSize: dense ? 7.5 : 9,
+              letterSpacing: dense ? 0.8 : 1.4,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ],
@@ -293,15 +429,16 @@ class _ConsoleHeader extends StatelessWidget {
 }
 
 class _ConsoleDot extends StatelessWidget {
-  const _ConsoleDot({required this.color});
+  const _ConsoleDot({required this.color, required this.size});
 
   final Color color;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 7,
-      height: 7,
+      width: size,
+      height: size,
       child: DecoratedBox(
         decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       ),
@@ -310,7 +447,9 @@ class _ConsoleDot extends StatelessWidget {
 }
 
 class _RoleOwnershipCallout extends StatelessWidget {
-  const _RoleOwnershipCallout();
+  const _RoleOwnershipCallout({required this.dense});
+
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -330,16 +469,16 @@ class _RoleOwnershipCallout extends StatelessWidget {
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.20)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(dense ? 10 : AppSpacing.md),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(
+            Icon(
               Icons.verified_outlined,
-              size: 19,
+              size: dense ? 17 : 19,
               color: AppColors.primary,
             ),
-            const SizedBox(width: AppSpacing.sm),
+            SizedBox(width: dense ? 7 : AppSpacing.sm),
             Expanded(
               child: Text(
                 'Flutter ownership covers architecture, responsive UI, state, '
@@ -347,8 +486,8 @@ class _RoleOwnershipCallout extends StatelessWidget {
                 'debugging, testing, maintenance, and release delivery.',
                 style: TextStyle(
                   color: colors.onSurface.withValues(alpha: 0.66),
-                  fontSize: 12.5,
-                  height: 1.52,
+                  fontSize: dense ? 10.8 : 12.5,
+                  height: dense ? 1.47 : 1.52,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -361,7 +500,10 @@ class _RoleOwnershipCallout extends StatelessWidget {
 }
 
 class _OwnershipSystem extends StatelessWidget {
-  const _OwnershipSystem();
+  const _OwnershipSystem({this.dense = false, this.narrow = false});
+
+  final bool dense;
+  final bool narrow;
 
   static const List<_ResponsibilityData> _items = [
     _ResponsibilityData(
@@ -414,63 +556,86 @@ class _OwnershipSystem extends StatelessWidget {
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
+    final padding = dense
+        ? 12.0
+        : narrow
+        ? 14.0
+        : AppSpacing.lg;
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.surface.withValues(alpha: isDark ? 0.70 : 0.88),
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(
+          dense ? AppRadius.md : AppRadius.lg,
+        ),
         border: Border.all(color: colors.outline.withValues(alpha: 0.80)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: AppColors.brandGradient,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                  ),
-                  child: const SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Icon(
-                      Icons.developer_board_outlined,
-                      size: 21,
-                      color: AppColors.white,
+            if (dense) ...[
+              Row(
+                children: [
+                  const _OwnershipIcon(size: 38),
+                  const Spacer(),
+                  const _AreaCounter(dense: true),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Flutter ownership system',
+                style: TextStyle(
+                  color: colors.onSurface,
+                  fontSize: 16,
+                  height: 1.2,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'The application-side responsibilities I handle in production.',
+                style: TextStyle(
+                  color: colors.onSurface.withValues(alpha: 0.48),
+                  fontSize: 10.5,
+                  height: 1.4,
+                ),
+              ),
+            ] else
+              Row(
+                children: [
+                  const _OwnershipIcon(size: 44),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Flutter ownership system',
+                          style: TextStyle(
+                            color: colors.onSurface,
+                            fontSize: narrow ? 16 : 19,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'The application-side responsibilities I handle in production.',
+                          style: TextStyle(
+                            color: colors.onSurface.withValues(alpha: 0.48),
+                            fontSize: narrow ? 11 : 12,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Flutter ownership system',
-                        style: TextStyle(
-                          color: colors.onSurface,
-                          fontSize: 19,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'The application-side responsibilities I handle in production.',
-                        style: TextStyle(
-                          color: colors.onSurface.withValues(alpha: 0.48),
-                          fontSize: 12,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const _AreaCounter(),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(width: 6),
+                  const _AreaCounter(),
+                ],
+              ),
+            SizedBox(height: dense ? 12 : AppSpacing.lg),
             LayoutBuilder(
               builder: (context, constraints) {
                 final useTwoColumns = constraints.maxWidth >= 540;
@@ -479,9 +644,9 @@ class _OwnershipSystem extends StatelessWidget {
                   return Column(
                     children: [
                       for (var index = 0; index < _items.length; index++) ...[
-                        _ResponsibilityCard(data: _items[index]),
+                        _ResponsibilityCard(data: _items[index], dense: dense),
                         if (index != _items.length - 1)
-                          const SizedBox(height: AppSpacing.xs),
+                          SizedBox(height: dense ? 6 : AppSpacing.xs),
                       ],
                     ],
                   );
@@ -510,8 +675,35 @@ class _OwnershipSystem extends StatelessWidget {
   }
 }
 
+class _OwnershipIcon extends StatelessWidget {
+  const _OwnershipIcon({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: AppColors.brandGradient,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Icon(
+          Icons.developer_board_outlined,
+          size: size * 0.48,
+          color: AppColors.white,
+        ),
+      ),
+    );
+  }
+}
+
 class _AreaCounter extends StatelessWidget {
-  const _AreaCounter();
+  const _AreaCounter({this.dense = false});
+
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -523,13 +715,16 @@ class _AreaCounter extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
       ),
-      child: const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: dense ? 7 : 9,
+          vertical: dense ? 5 : 6,
+        ),
         child: Text(
           '06',
           style: TextStyle(
             color: AppColors.primary,
-            fontSize: 10,
+            fontSize: dense ? 9 : 10,
             letterSpacing: 1,
             fontWeight: FontWeight.w900,
           ),
@@ -554,9 +749,10 @@ class _ResponsibilityData {
 }
 
 class _ResponsibilityCard extends StatefulWidget {
-  const _ResponsibilityCard({required this.data});
+  const _ResponsibilityCard({required this.data, this.dense = false});
 
   final _ResponsibilityData data;
+  final bool dense;
 
   @override
   State<_ResponsibilityCard> createState() => _ResponsibilityCardState();
@@ -585,7 +781,7 @@ class _ResponsibilityCardState extends State<_ResponsibilityCard> {
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
         transform: Matrix4.translationValues(0, _hovered ? -3 : 0, 0),
-        padding: const EdgeInsets.all(AppSpacing.sm),
+        padding: EdgeInsets.all(widget.dense ? 10 : AppSpacing.sm),
         decoration: BoxDecoration(
           color: _hovered
               ? AppColors.primary.withValues(alpha: 0.075)
@@ -613,8 +809,8 @@ class _ResponsibilityCardState extends State<_ResponsibilityCard> {
               children: [
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
-                  width: 38,
-                  height: 38,
+                  width: widget.dense ? 34 : 38,
+                  height: widget.dense ? 34 : 38,
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(
                       alpha: _hovered ? 0.18 : 0.10,
@@ -628,7 +824,7 @@ class _ResponsibilityCardState extends State<_ResponsibilityCard> {
                   ),
                   child: Icon(
                     widget.data.icon,
-                    size: 18,
+                    size: widget.dense ? 16 : 18,
                     color: AppColors.primary,
                   ),
                 ),
@@ -637,19 +833,19 @@ class _ResponsibilityCardState extends State<_ResponsibilityCard> {
                   widget.data.index,
                   style: TextStyle(
                     color: colors.onSurface.withValues(alpha: 0.28),
-                    fontSize: 9.5,
+                    fontSize: widget.dense ? 8.5 : 9.5,
                     letterSpacing: 1.2,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: widget.dense ? 8 : AppSpacing.sm),
             Text(
               widget.data.title,
               style: TextStyle(
                 color: colors.onSurface,
-                fontSize: 13,
+                fontSize: widget.dense ? 12 : 13,
                 height: 1.28,
                 fontWeight: FontWeight.w800,
               ),
@@ -659,7 +855,7 @@ class _ResponsibilityCardState extends State<_ResponsibilityCard> {
               widget.data.description,
               style: TextStyle(
                 color: colors.onSurface.withValues(alpha: 0.54),
-                fontSize: 11.5,
+                fontSize: widget.dense ? 10.3 : 11.5,
                 height: 1.45,
               ),
             ),
@@ -671,9 +867,10 @@ class _ResponsibilityCardState extends State<_ResponsibilityCard> {
 }
 
 class _DeliveryScope extends StatelessWidget {
-  const _DeliveryScope({required this.compact});
+  const _DeliveryScope({required this.compact, required this.dense});
 
   final bool compact;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -704,9 +901,9 @@ class _DeliveryScope extends StatelessWidget {
       return Column(
         children: [
           for (var index = 0; index < items.length; index++) ...[
-            _DeliveryCard(data: items[index]),
+            _DeliveryCard(data: items[index], dense: dense),
             if (index != items.length - 1)
-              const SizedBox(height: AppSpacing.xs),
+              SizedBox(height: dense ? 6 : AppSpacing.xs),
           ],
         ],
       );
@@ -736,9 +933,10 @@ class _DeliveryData {
 }
 
 class _DeliveryCard extends StatefulWidget {
-  const _DeliveryCard({required this.data});
+  const _DeliveryCard({required this.data, this.dense = false});
 
   final _DeliveryData data;
+  final bool dense;
 
   @override
   State<_DeliveryCard> createState() => _DeliveryCardState();
@@ -766,7 +964,7 @@ class _DeliveryCardState extends State<_DeliveryCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.all(AppSpacing.sm),
+        padding: EdgeInsets.all(widget.dense ? 10 : AppSpacing.sm),
         decoration: BoxDecoration(
           color: _hovered
               ? AppColors.secondary.withValues(alpha: 0.075)
@@ -780,9 +978,13 @@ class _DeliveryCardState extends State<_DeliveryCard> {
         ),
         child: Row(
           children: [
-            Icon(widget.data.icon, size: 18, color: AppColors.primary),
-            const SizedBox(width: AppSpacing.sm),
-            Flexible(
+            Icon(
+              widget.data.icon,
+              size: widget.dense ? 16 : 18,
+              color: AppColors.primary,
+            ),
+            SizedBox(width: widget.dense ? 8 : AppSpacing.sm),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -790,7 +992,7 @@ class _DeliveryCardState extends State<_DeliveryCard> {
                     widget.data.value,
                     style: TextStyle(
                       color: colors.onSurface,
-                      fontSize: 12.5,
+                      fontSize: widget.dense ? 11.5 : 12.5,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -799,7 +1001,7 @@ class _DeliveryCardState extends State<_DeliveryCard> {
                     widget.data.label,
                     style: TextStyle(
                       color: colors.onSurface.withValues(alpha: 0.46),
-                      fontSize: 10.5,
+                      fontSize: widget.dense ? 9.5 : 10.5,
                     ),
                   ),
                 ],
@@ -813,10 +1015,15 @@ class _DeliveryCardState extends State<_DeliveryCard> {
 }
 
 class _MetaChip extends StatelessWidget {
-  const _MetaChip({required this.icon, required this.label});
+  const _MetaChip({
+    required this.icon,
+    required this.label,
+    required this.dense,
+  });
 
   final IconData icon;
   final String label;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -829,20 +1036,20 @@ class _MetaChip extends StatelessWidget {
         border: Border.all(color: colors.outline.withValues(alpha: 0.62)),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: 7,
+        padding: EdgeInsets.symmetric(
+          horizontal: dense ? 7 : AppSpacing.sm,
+          vertical: dense ? 5 : 7,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: AppColors.primary),
-            const SizedBox(width: AppSpacing.xxs),
+            Icon(icon, size: dense ? 12 : 14, color: AppColors.primary),
+            SizedBox(width: dense ? 4 : AppSpacing.xxs),
             Text(
               label,
               style: TextStyle(
                 color: colors.onSurface.withValues(alpha: 0.66),
-                fontSize: 11.5,
+                fontSize: dense ? 9.5 : 11.5,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -854,10 +1061,15 @@ class _MetaChip extends StatelessWidget {
 }
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.icon, required this.label});
+  const _SectionLabel({
+    required this.icon,
+    required this.label,
+    required this.dense,
+  });
 
   final IconData icon;
   final String label;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -873,21 +1085,21 @@ class _SectionLabel extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: 7,
+        padding: EdgeInsets.symmetric(
+          horizontal: dense ? 8 : AppSpacing.sm,
+          vertical: dense ? 6 : 7,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 15, color: AppColors.white),
-            const SizedBox(width: AppSpacing.xs),
+            Icon(icon, size: dense ? 13 : 15, color: AppColors.white),
+            SizedBox(width: dense ? 5 : AppSpacing.xs),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.white,
-                fontSize: 10.5,
-                letterSpacing: 1.4,
+                fontSize: dense ? 8.5 : 10.5,
+                letterSpacing: dense ? 0.9 : 1.4,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -899,7 +1111,9 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _SectionIndex extends StatelessWidget {
-  const _SectionIndex();
+  const _SectionIndex({required this.dense});
+
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -908,11 +1122,11 @@ class _SectionIndex extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.md),
       child: Text(
-        '03 / EXPERIENCE',
+        dense ? '03' : '03 / EXPERIENCE',
         style: TextStyle(
           color: colors.onSurface.withValues(alpha: 0.30),
-          fontSize: 9.5,
-          letterSpacing: 1.6,
+          fontSize: dense ? 8 : 9.5,
+          letterSpacing: dense ? 1 : 1.6,
           fontWeight: FontWeight.w800,
         ),
       ),
